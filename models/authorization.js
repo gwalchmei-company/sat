@@ -7,13 +7,15 @@ function can(user, feature) {
   return authorized;
 }
 
+const DefaultUserFeatures = ["create:session", "read:session"];
+
 const featuresRoles = {
   anonymous: ["read:activation_token", "create:session", "create:user"],
-  customer: [],
-  admin: ["read:devices"],
-  manager: ["read:devices"],
-  operator: ["read:devices"],
-  support: ["read:devices"],
+  customer: [...DefaultUserFeatures],
+  admin: [...DefaultUserFeatures, "create:user", "read:devices"],
+  manager: [...DefaultUserFeatures, "create:user", "read:devices"],
+  operator: [...DefaultUserFeatures, "read:devices"],
+  support: [...DefaultUserFeatures, "read:devices"],
 };
 
 const authorization = {

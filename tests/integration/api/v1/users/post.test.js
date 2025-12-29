@@ -2,6 +2,8 @@ import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator.js";
 import user from "models/user.js";
 import password from "models/password.js";
+import authorization from "models/authorization";
+import { faker } from "@faker-js/faker/.";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -281,11 +283,202 @@ describe("POST /api/v1/users", () => {
     });
   });
 
-  describe("Default user", () => {
-    test("With user logged", async () => {
+  describe("Customer user", () => {
+    test("Should not be able to create a user", async () => {
       const userCreated = await orchestrator.createUser();
       await orchestrator.activateUser(userCreated);
       const sessionObject = await orchestrator.createSession(userCreated.id);
+      await user.setFeatures(
+        userCreated.id,
+        authorization.featuresRoles.customer,
+      );
+
+      const response = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          username: "ryangwalchmei",
+          email: "contato@gwalchmei.com.br",
+          password: "senha123",
+        }),
+      });
+
+      expect(response.status).toBe(403);
+      const responseBody = await response.json();
+      expect(responseBody).toEqual({
+        name: "ForbiddenError",
+        message: "Você não possui permissão para executar essa ação",
+        action: 'Verifique se seu usuário possui a feature "create:user".',
+        status_code: 403,
+      });
+    });
+  });
+
+  describe("Admin user", () => {
+    test("Should be able to create a user", async () => {
+      const userCreated = await orchestrator.createUser();
+      await orchestrator.activateUser(userCreated);
+      const sessionObject = await orchestrator.createSession(userCreated.id);
+      await user.setFeatures(userCreated.id, authorization.featuresRoles.admin);
+
+      const userObjectValues = {
+        username: faker.internet.username(),
+        email: faker.internet.email(),
+        password: "senha123",
+        cpf: orchestrator.cpf.generate(false),
+        address: "rua tal, cidade tal, estado tal, pais tal",
+        phone: "91984546411",
+      };
+
+      const response = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify(userObjectValues),
+      });
+
+      expect(response.status).toBe(201);
+      const responseBody = await response.json();
+
+      expect(responseBody).toEqual({
+        ...userObjectValues,
+        id: responseBody.id,
+        features: ["read:activation_token"],
+        notes: null,
+        password: responseBody.password,
+        created_at: responseBody.created_at,
+        updated_at: responseBody.updated_at,
+      });
+
+      expect(uuidVersion(responseBody.id)).toBe(4);
+      expect(Date.parse(responseBody.created_at)).not.toBeNaN();
+      expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+
+      const userInDatabase = await user.findOneByUsername("ryangwalchmei");
+      const correctPasswordMatch = await password.compare(
+        "senha123",
+        userInDatabase.password,
+      );
+
+      const incorrectPasswordMatch = await password.compare(
+        "SenhaErrada",
+        userInDatabase.password,
+      );
+
+      expect(correctPasswordMatch).toBe(true);
+      expect(incorrectPasswordMatch).toBe(false);
+    });
+  });
+
+  describe("Manager user", () => {
+    test("Should be able to create a user", async () => {
+      const userCreated = await orchestrator.createUser();
+      await orchestrator.activateUser(userCreated);
+      const sessionObject = await orchestrator.createSession(userCreated.id);
+      await user.setFeatures(
+        userCreated.id,
+        authorization.featuresRoles.manager,
+      );
+
+      const userObjectValues = {
+        username: faker.internet.username(),
+        email: faker.internet.email(),
+        password: "senha123",
+        cpf: orchestrator.cpf.generate(false),
+        address: "rua tal, cidade tal, estado tal, pais tal",
+        phone: "91984546411",
+      };
+
+      const response = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify(userObjectValues),
+      });
+
+      expect(response.status).toBe(201);
+      const responseBody = await response.json();
+
+      expect(responseBody).toEqual({
+        ...userObjectValues,
+        id: responseBody.id,
+        features: ["read:activation_token"],
+        notes: null,
+        password: responseBody.password,
+        created_at: responseBody.created_at,
+        updated_at: responseBody.updated_at,
+      });
+
+      expect(uuidVersion(responseBody.id)).toBe(4);
+      expect(Date.parse(responseBody.created_at)).not.toBeNaN();
+      expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+
+      const userInDatabase = await user.findOneByUsername("ryangwalchmei");
+      const correctPasswordMatch = await password.compare(
+        "senha123",
+        userInDatabase.password,
+      );
+
+      const incorrectPasswordMatch = await password.compare(
+        "SenhaErrada",
+        userInDatabase.password,
+      );
+
+      expect(correctPasswordMatch).toBe(true);
+      expect(incorrectPasswordMatch).toBe(false);
+    });
+  });
+
+  describe("Operator user", () => {
+    test("Should not be able to create a user", async () => {
+      const userCreated = await orchestrator.createUser();
+      await orchestrator.activateUser(userCreated);
+      const sessionObject = await orchestrator.createSession(userCreated.id);
+      await user.setFeatures(
+        userCreated.id,
+        authorization.featuresRoles.operator,
+      );
+
+      const response = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          username: "ryangwalchmei",
+          email: "contato@gwalchmei.com.br",
+          password: "senha123",
+        }),
+      });
+
+      expect(response.status).toBe(403);
+      const responseBody = await response.json();
+      expect(responseBody).toEqual({
+        name: "ForbiddenError",
+        message: "Você não possui permissão para executar essa ação",
+        action: 'Verifique se seu usuário possui a feature "create:user".',
+        status_code: 403,
+      });
+    });
+  });
+
+  describe("Support user", () => {
+    test("Should not be able to create a user", async () => {
+      const userCreated = await orchestrator.createUser();
+      await orchestrator.activateUser(userCreated);
+      const sessionObject = await orchestrator.createSession(userCreated.id);
+      await user.setFeatures(
+        userCreated.id,
+        authorization.featuresRoles.support,
+      );
 
       const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
