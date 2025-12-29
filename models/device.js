@@ -1,6 +1,25 @@
 import database from "infra/database";
 import { ValidationError } from "infra/errors";
 
+async function listAll() {
+  const deviceList = await runSelectQuery();
+
+  return deviceList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          devices
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
 async function create(deviceInputValues) {
   await validateUniqueUTID(deviceInputValues.utid_device);
   await validateUniqueSerialNumber(deviceInputValues.serial_number);
@@ -128,6 +147,7 @@ async function validateUniqueSerialNumber(serialNumber) {
 
 const device = {
   create,
+  listAll,
 };
 
 export default device;
