@@ -30,6 +30,22 @@ exports.up = (pgm) => {
       notNull: true,
       default: "{}",
     },
+    cpf: {
+      type: "varchar(30)",
+      notNull: true,
+      unique: true,
+    },
+    phone: {
+      type: "varchar(30)",
+      notNull: true,
+    },
+    address: {
+      type: "text",
+      notNull: true,
+    },
+    notes: {
+      type: "text",
+    },
 
     // Why timestamp with timezone? https://justatheory.com/2012/04/postgres-use-timestamptz/
     created_at: {

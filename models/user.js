@@ -98,8 +98,29 @@ async function findOneByEmail(email) {
 async function create(userInputValues) {
   await validateUniqueUsername(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
+  await validateUniqueCpf(userInputValues.cpf);
   await hashPasswordInObject(userInputValues);
   injectDefaultfeaturesInObject(userInputValues);
+
+  if (!userInputValues.cpf) {
+    throw new ValidationError({
+      message: "CPF não foi informado ou inválido.",
+      action: "Insira um CPF válido para realizar esta operação.",
+    });
+  }
+  if (!userInputValues.phone) {
+    throw new ValidationError({
+      message: "Número telefone não foi informado ou inválido.",
+      action: "Insira um número telefone válido para realizar esta operação.",
+    });
+  }
+
+  if (!userInputValues.address) {
+    throw new ValidationError({
+      message: "Endereço não foi informado.",
+      action: "Insira um endereço para realizar esta operação.",
+    });
+  }
 
   const newUser = await runInsertQuery(userInputValues);
   return newUser;
@@ -108,9 +129,9 @@ async function create(userInputValues) {
     const results = await database.query({
       text: `
         INSERT INTO
-          users (username, email, password, features)
+          users (username, email, password, features, cpf, phone, address, notes)
         VALUES
-          ($1, $2, $3, $4)
+          ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING
           *
         ;`,
@@ -119,6 +140,10 @@ async function create(userInputValues) {
         userInputValues.email,
         userInputValues.password,
         userInputValues.features,
+        userInputValues.cpf,
+        userInputValues.phone,
+        userInputValues.address,
+        userInputValues.notes,
       ],
     });
     return results.rows[0];
@@ -158,7 +183,11 @@ async function update(username, userInputValues) {
           username = $2,
           email = $3,
           password = $4,
-          updated_at = timezone('utc', now())
+          updated_at = timezone('utc', now()),
+          cpf = $5,
+          phone = $6,
+          address = $7,
+          notes = $8
         WHERE
           id = $1
         RETURNING
@@ -169,6 +198,10 @@ async function update(username, userInputValues) {
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
+        userWithNewValues.cpf,
+        userWithNewValues.phone,
+        userWithNewValues.address,
+        userWithNewValues.notes,
       ],
     });
 
@@ -214,6 +247,27 @@ async function validateUniqueEmail(email) {
     throw new ValidationError({
       message: "O email informado já está sendo utilizado.",
       action: "Utilize outro email para realizar esta operação.",
+    });
+  }
+}
+
+async function validateUniqueCpf(cpf) {
+  const results = await database.query({
+    text: `
+      SELECT
+        cpf
+      FROM
+        users
+      WHERE
+        LOWER(cpf) = LOWER($1)
+      ;`,
+    values: [cpf],
+  });
+
+  if (results.rowCount > 0) {
+    throw new ValidationError({
+      message: "O CPF informado já está sendo utilizado.",
+      action: "Utilize outro CPF para realizar esta operação.",
     });
   }
 }

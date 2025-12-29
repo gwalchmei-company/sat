@@ -1,10 +1,10 @@
 import retry from "async-retry";
-import { faker } from "@faker-js/faker";
-
+import { faker, fakerPT_BR } from "@faker-js/faker/";
 import database from "infra/database.js";
 import migrator from "models/migrator.js";
 import user from "models/user.js";
 import session from "models/session.js";
+import { cpf } from "cpf-cnpj-validator";
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
 
@@ -57,6 +57,13 @@ async function createUser(userObject) {
       userObject?.username || faker.internet.username().replace(/[_.-]/g, ""),
     email: userObject?.email || faker.internet.email(),
     password: userObject?.password || "validpassword",
+    cpf: userObject?.cpf || cpf.generate(false),
+    phone:
+      userObject?.phone ||
+      fakerPT_BR.phone.number({
+        style: "national",
+      }),
+    address: userObject?.address || faker.location.streetAddress(),
   });
 }
 
@@ -112,6 +119,11 @@ const orchestrator = {
   getLastEmail,
   extractUUID,
   activateUser,
+  cpf: {
+    isValid: cpf.isValid,
+    format: cpf.format,
+    generate: cpf.generate,
+  },
 };
 
 export default orchestrator;

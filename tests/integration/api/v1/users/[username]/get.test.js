@@ -28,6 +28,10 @@ describe("GET /api/v1/users/[username]", () => {
         email: createdUser.email,
         password: responseBody.password,
         features: ["read:activation_token"],
+        cpf: createdUser.cpf,
+        phone: createdUser.phone,
+        address: createdUser.address,
+        notes: createdUser.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -56,6 +60,10 @@ describe("GET /api/v1/users/[username]", () => {
         email: createdUser.email,
         password: responseBody.password,
         features: ["read:activation_token"],
+        cpf: createdUser.cpf,
+        phone: createdUser.phone,
+        address: createdUser.address,
+        notes: createdUser.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
