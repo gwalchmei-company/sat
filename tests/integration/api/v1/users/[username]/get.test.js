@@ -37,7 +37,7 @@ describe("GET /api/v1/users/:username", () => {
   describe("Customer user", () => {
     test("Self user data", async () => {
       const userCreated = await orchestrator.createUser({
-        username: "costumerUserSelf",
+        username: "customerUserSelf",
       });
       const activatedUser = await orchestrator.activateUser(userCreated);
       const sessionObject = await orchestrator.createSession(userCreated.id);
@@ -47,7 +47,7 @@ describe("GET /api/v1/users/:username", () => {
       );
 
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/costumerUserSelf",
+        "http://localhost:3000/api/v1/users/customerUserSelf",
         {
           headers: {
             "Content-Type": "application/json",
@@ -60,7 +60,7 @@ describe("GET /api/v1/users/:username", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "costumerUserSelf",
+        username: "customerUserSelf",
         email: activatedUser.email,
         password: responseBody.password,
         features: authorization.featuresRoles.customer,

@@ -47,7 +47,7 @@ describe("PATCH /api/v1/users/:username", () => {
   describe("Customer user", () => {
     test("Change user self data", async () => {
       const createdUser = await orchestrator.createUser({
-        username: "costumerUserSelf",
+        username: "customerUserSelf",
       });
       await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(createdUser.id);
@@ -122,7 +122,7 @@ describe("PATCH /api/v1/users/:username", () => {
 
     test("Change other user data", async () => {
       const createdUser = await orchestrator.createUser({
-        username: "costumerSelf",
+        username: "customerSelf",
       });
       await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(createdUser.id);
@@ -168,7 +168,7 @@ describe("PATCH /api/v1/users/:username", () => {
 
     test("With nonexistent 'username'", async () => {
       const createdUser = await orchestrator.createUser({
-        username: "costumerUserSelf",
+        username: "customerUserSelf",
       });
       await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(createdUser.id);
