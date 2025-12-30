@@ -8,7 +8,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:user"), getHandler);
-router.patch(patchHandler);
+router.patch(controller.canRequest("update:user"), patchHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -32,8 +32,21 @@ async function getHandler(request, response) {
 }
 
 async function patchHandler(request, response) {
+  const userLogged = request.context.user;
   const username = request.query.username;
   const userInputValues = request.body;
+
+  const targetUser =
+    username === userLogged.username
+      ? userLogged
+      : await user.findOneByUsername(username);
+
+  if (!authorization.can(userLogged, "update:user", targetUser)) {
+    throw new ForbiddenError({
+      message: "Você não possui permissão para ler este usuário.",
+      action: 'Verifique a feature "update:user" ou "update:user:others".',
+    });
+  }
 
   const updatedUser = await user.update(username, userInputValues);
   return response.status(200).json(updatedUser);

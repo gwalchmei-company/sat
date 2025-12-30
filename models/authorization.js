@@ -68,7 +68,13 @@ const DefaultUserFeatures = ["create:session", "read:session"];
 
 const featuresRoles = {
   anonymous: ["read:activation_token", "create:session", "create:user"],
-  customer: [...DefaultUserFeatures, "read:user", "read:user:self"],
+  customer: [
+    ...DefaultUserFeatures,
+    "read:user",
+    "read:user:self",
+    "update:user",
+    "update:user:self",
+  ],
   admin: [
     ...DefaultUserFeatures,
     "create:user",
@@ -76,6 +82,9 @@ const featuresRoles = {
     "read:user",
     "read:user:self",
     "read:user:others",
+    "update:user",
+    "update:user:self",
+    "update:user:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -84,6 +93,9 @@ const featuresRoles = {
     "read:user",
     "read:user:self",
     "read:user:others",
+    "update:user",
+    "update:user:self",
+    "update:user:others",
   ],
   operator: [
     ...DefaultUserFeatures,
