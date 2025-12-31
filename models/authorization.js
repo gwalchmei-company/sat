@@ -1,4 +1,4 @@
-import { ValidationError } from "infra/errors";
+import { ForbiddenError, ValidationError } from "infra/errors";
 import availableFeatures from "models/user-features";
 
 export function can(user, feature, resource = null) {
@@ -27,6 +27,83 @@ export function can(user, feature, resource = null) {
   }
 
   return false;
+}
+
+function filterInput(user, feature, input, target) {
+  validateUser(user);
+  validateFeature(feature);
+  validateInput(input);
+
+  let filteredInputValues = {};
+
+  if (feature === "update:devices:status" && can(user, feature, target)) {
+    const allowedFields = ["status"];
+    const inputKeys = Object.keys(input);
+
+    const hasInvalidField = inputKeys.some(
+      (key) => !allowedFields.includes(key),
+    );
+
+    if (hasInvalidField) {
+      throw new ForbiddenError({
+        message:
+          "Você não possui permissão para atualizar os dados deste dispositivo.",
+        action: "Entre em contato com o suporte caso precise de ajuda.",
+      });
+    }
+
+    filteredInputValues = {
+      status: input.status,
+    };
+  }
+
+  if (feature === "update:devices" && can(user, feature, target)) {
+    if (input.id) {
+      throw new ValidationError({
+        message: `Não é permitido atualizar o campo "id" do dispositivo.`,
+        action: `Remova o campo "id" do input e tente novamente.`,
+      });
+    }
+    if (input.created_at) {
+      throw new ValidationError({
+        message:
+          'Não é permitido atualizar o campo "created_at" do dispositivo.',
+        action: 'Remova o campo "created_at" do input e tente novamente.',
+      });
+    }
+
+    if (input.updated_at) {
+      throw new ValidationError({
+        message:
+          'Não é permitido atualizar o campo "updated_at" do dispositivo.',
+        action: 'Remova o campo "updated_at" do input e tente novamente.',
+      });
+    }
+
+    filteredInputValues = {
+      email_acc: input?.email_acc,
+      utid_device: input?.utid_device,
+      serial_number: input?.serial_number,
+      serial_number_router: input?.serial_number_router,
+      model: input?.model,
+      provider: input?.provider,
+      tracker_code: input?.tracker_code,
+      status: input?.status,
+      notes: input?.notes,
+    };
+  }
+
+  // Force the clean up of "undefined" values
+  return JSON.parse(JSON.stringify(filteredInputValues));
+}
+
+function validateInput(input) {
+  if (!input) {
+    throw new ValidationError({
+      message: `Nenhum "input" foi especificado para a ação de filtro.`,
+      action: `Contate o suporte informando o campo "errorId".`,
+    });
+  }
 }
 
 function validateUser(user) {
@@ -79,6 +156,8 @@ const featuresRoles = {
     ...DefaultUserFeatures,
     "create:user",
     "read:devices",
+    "update:devices",
+
     "read:user",
     "read:user:self",
     "read:user:others",
@@ -90,16 +169,22 @@ const featuresRoles = {
     ...DefaultUserFeatures,
     "create:user",
     "read:devices",
+    "update:devices",
+
     "read:user",
     "read:user:self",
     "read:user:others",
     "update:user",
     "update:user:self",
     "update:user:others",
+    "update:devices",
   ],
   operator: [
     ...DefaultUserFeatures,
     "read:devices",
+    "update:devices",
+    "update:devices:status",
+
     "read:user",
     "read:user:self",
     "read:user:others",
@@ -116,6 +201,7 @@ const featuresRoles = {
 const authorization = {
   can,
   featuresRoles,
+  filterInput,
 };
 
 export default authorization;

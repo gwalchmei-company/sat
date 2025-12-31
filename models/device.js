@@ -1,5 +1,6 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError } from "infra/errors";
+import { validate as uuidIsValid } from "uuid";
 
 async function listAll() {
   const deviceList = await runSelectQuery();
@@ -146,8 +147,14 @@ async function validateUniqueSerialNumber(serialNumber) {
 }
 
 async function findOneById(id) {
-  const deviceFound = await runSelectQuery(id);
+  if (!uuidIsValid(id)) {
+    throw new ValidationError({
+      message: "O id informado não foi encontrado ou é inválido.",
+      action: "Verifique o id e tente novamente.",
+    });
+  }
 
+  const deviceFound = await runSelectQuery(id);
   return deviceFound;
 
   async function runSelectQuery(id) {
@@ -176,10 +183,57 @@ async function findOneById(id) {
   }
 }
 
+async function update(id, deviceInputValues) {
+  const currentDevice = await findOneById(id);
+
+  const deviceWithNewValues = { ...currentDevice, ...deviceInputValues };
+
+  const updatedDevice = await runUpdateQuery(deviceWithNewValues);
+  return updatedDevice;
+
+  async function runUpdateQuery(deviceWithNewValues) {
+    const results = await database.query({
+      text: `
+        UPDATE
+          devices
+        SET
+          email_acc = $2,
+          utid_device = $3,
+          serial_number = $4,
+          serial_number_router = $5,
+          model = $6,
+          provider = $7,
+          tracker_code = $8,
+          status = $9,
+          notes = $10,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+        RETURNING
+          *
+      `,
+      values: [
+        deviceWithNewValues.id,
+        deviceWithNewValues.email_acc,
+        deviceWithNewValues.utid_device,
+        deviceWithNewValues.serial_number,
+        deviceWithNewValues.serial_number_router,
+        deviceWithNewValues.model,
+        deviceWithNewValues.provider,
+        deviceWithNewValues.tracker_code,
+        deviceWithNewValues.status,
+        deviceWithNewValues.notes,
+      ],
+    });
+    return results.rows[0];
+  }
+}
+
 const device = {
   create,
   listAll,
   findOneById,
+  update,
 };
 
 export default device;
