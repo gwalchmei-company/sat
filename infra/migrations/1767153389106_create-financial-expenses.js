@@ -9,7 +9,7 @@ exports.up = (pgm) => {
       type: "text",
       notNull: true,
     },
-    amount: {
+    amount_in_cents: {
       type: "integer",
       notNull: true,
       default: 0,

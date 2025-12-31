@@ -6,6 +6,9 @@ import user from "models/user.js";
 import session from "models/session.js";
 import { cpf } from "cpf-cnpj-validator";
 import device from "models/device";
+import financial_expense, {
+  FINANCIAL_EXPENSE_CATEGORIES,
+} from "models/financial-expenses";
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
 
@@ -126,6 +129,20 @@ async function createDevice(deviceObject) {
   });
 }
 
+async function createFinancialExpense(financialExpenseObject) {
+  return await financial_expense.create({
+    description: financialExpenseObject?.description || faker.lorem.words(3),
+    amount_in_cents:
+      financialExpenseObject?.amount_in_cents ||
+      faker.number.int({ min: 100, max: 10000 }),
+    category:
+      financialExpenseObject?.category ||
+      faker.helpers.arrayElement(FINANCIAL_EXPENSE_CATEGORIES),
+    paid_at: financialExpenseObject?.paid_at || null,
+    due_date_at: financialExpenseObject?.due_date_at || null,
+  });
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -142,6 +159,7 @@ const orchestrator = {
     generate: cpf.generate,
   },
   createDevice,
+  createFinancialExpense,
 };
 
 export default orchestrator;

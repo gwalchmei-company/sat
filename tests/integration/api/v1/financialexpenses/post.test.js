@@ -14,7 +14,7 @@ describe("POST /api/v1/financialexpenses", () => {
     test("deny create when user is anonymous", async () => {
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
-        amount: faker.number.int({ min: 100, max: 10000 }),
+        amount_in_cents: faker.number.int({ min: 100, max: 10000 }),
         category: "utilities",
         paid_at: faker.date.past().toISOString(),
       };
@@ -54,7 +54,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
-        amount: faker.number.int({ min: 100, max: 10000 }),
+        amount_in_cents: faker.number.int({ min: 100, max: 10000 }),
         category: "utilities",
         paid_at: faker.date.past().toISOString(),
       };
@@ -92,7 +92,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
-        amount: faker.number.int({ min: 100, max: 10000 }),
+        amount_in_cents: faker.number.int({ min: 100, max: 10000 }),
         category: "utilities",
         paid_at: faker.date.past().toISOString(),
         due_date_at: faker.date.future().toISOString(),
@@ -115,7 +115,7 @@ describe("POST /api/v1/financialexpenses", () => {
       expect(responseBody).toMatchObject({
         id: expect.any(String),
         description: financialExpenseInput.description,
-        amount: financialExpenseInput.amount,
+        amount_in_cents: financialExpenseInput.amount_in_cents,
         category: financialExpenseInput.category,
         paid_at: financialExpenseInput.paid_at,
         due_date_at: financialExpenseInput.due_date_at,
@@ -139,7 +139,7 @@ describe("POST /api/v1/financialexpenses", () => {
             Cookie: `session_id=${sessionObject.token}`,
           },
           body: JSON.stringify({
-            amount: 1000,
+            amount_in_cents: 1000,
             category: "utilities",
             paid_at: new Date().toISOString(),
           }),
@@ -156,7 +156,7 @@ describe("POST /api/v1/financialexpenses", () => {
       });
     });
 
-    test("fail when amount is negative", async () => {
+    test("fail when amount_in_cents is negative", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(createdUser.id);
@@ -172,7 +172,7 @@ describe("POST /api/v1/financialexpenses", () => {
           },
           body: JSON.stringify({
             description: "Conta inválida",
-            amount: -100,
+            amount_in_cents: -100,
             category: "utilities",
             paid_at: new Date().toISOString(),
           }),
@@ -189,7 +189,7 @@ describe("POST /api/v1/financialexpenses", () => {
       });
     });
 
-    test("fail when amount is missing", async () => {
+    test("fail when amount_in_cents is missing", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(createdUser.id);
@@ -237,7 +237,7 @@ describe("POST /api/v1/financialexpenses", () => {
           },
           body: JSON.stringify({
             description: "Conta inválida",
-            amount: 100,
+            amount_in_cents: 100,
             category: "utilities",
             paid_at: "data-invalida",
           }),
@@ -271,7 +271,7 @@ describe("POST /api/v1/financialexpenses", () => {
           },
           body: JSON.stringify({
             description: "Conta inválida",
-            amount: 100,
+            amount_in_cents: 100,
             category: "utilities",
             paid_at: new Date().toISOString(),
             due_date_at: "data-invalida",
@@ -306,7 +306,7 @@ describe("POST /api/v1/financialexpenses", () => {
           },
           body: JSON.stringify({
             description: "Teste",
-            amount: 100,
+            amount_in_cents: 100,
             category: "invalid-category",
             paid_at: new Date().toISOString(),
           }),
@@ -336,7 +336,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
-        amount: faker.number.int({ min: 100, max: 10000 }),
+        amount_in_cents: faker.number.int({ min: 100, max: 10000 }),
         category: "utilities",
         paid_at: faker.date.past().toISOString(),
       };
@@ -358,7 +358,7 @@ describe("POST /api/v1/financialexpenses", () => {
       expect(responseBody).toMatchObject({
         id: expect.any(String),
         description: financialExpenseInput.description,
-        amount: financialExpenseInput.amount,
+        amount_in_cents: financialExpenseInput.amount_in_cents,
         category: financialExpenseInput.category,
         paid_at: financialExpenseInput.paid_at,
         created_at: responseBody.created_at,
@@ -379,7 +379,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
-        amount: faker.number.int({ min: 100, max: 10000 }),
+        amount_in_cents: faker.number.int({ min: 100, max: 10000 }),
         category: "utilities",
         paid_at: faker.date.past().toISOString(),
       };
@@ -420,7 +420,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
-        amount: faker.number.int({ min: 100, max: 10000 }),
+        amount_in_cents: faker.number.int({ min: 100, max: 10000 }),
         category: "utilities",
         paid_at: faker.date.past().toISOString(),
       };

@@ -30,14 +30,14 @@ async function create(financialExpenseInputValues) {
     }
 
     if (financialExpenseInputValues.description)
-      if (!financialExpenseInputValues.amount) {
+      if (!financialExpenseInputValues.amount_in_cents) {
         throw new ValidationError({
           message: "Valor não foi informado.",
           action: "Insira um valor válido para realizar esta operação.",
         });
       }
 
-    if (financialExpenseInputValues.amount < 0) {
+    if (financialExpenseInputValues.amount_in_cents < 0) {
       throw new ValidationError({
         message: "Valor não pode ser negativo.",
         action: "Insira um valor válido para realizar esta operação.",
@@ -84,7 +84,7 @@ async function create(financialExpenseInputValues) {
       INSERT INTO financial_expenses
       (
         description,
-        amount,
+        amount_in_cents,
         category,
         paid_at,
         due_date_at
@@ -96,7 +96,7 @@ async function create(financialExpenseInputValues) {
       ;`,
       values: [
         financialExpenseInputValues.description,
-        financialExpenseInputValues.amount,
+        financialExpenseInputValues.amount_in_cents,
         financialExpenseInputValues.category,
         financialExpenseInputValues.paid_at,
         financialExpenseInputValues.due_date_at,
