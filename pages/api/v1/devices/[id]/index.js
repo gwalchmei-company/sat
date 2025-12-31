@@ -9,6 +9,7 @@ const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:devices"), getHandler);
 router.patch(controller.canRequest("update:devices"), patchHandler);
+router.delete(controller.canRequest("delete:devices"), deleteHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -71,4 +72,12 @@ async function patchHandler(request, response) {
   const deviceList = await device.update(deviceId, secureInputValues);
 
   return response.status(200).json(deviceList);
+}
+
+async function deleteHandler(request, response) {
+  const deviceId = request.query.id;
+
+  await device.Delete(deviceId);
+
+  return response.status(200).json({});
 }

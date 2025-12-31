@@ -19,6 +19,7 @@ const availableFeatures = new Set([
   "read:devices",
   "update:devices",
   "update:devices:status",
+  "delete:devices",
 ]);
 
 export default Object.freeze(availableFeatures);

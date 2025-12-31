@@ -229,11 +229,31 @@ async function update(id, deviceInputValues) {
   }
 }
 
+async function Delete(id) {
+  const deviceToDelete = await findOneById(id);
+
+  await runDeleteQuery(deviceToDelete.id);
+  return;
+
+  async function runDeleteQuery(id) {
+    await database.query({
+      text: `
+        DELETE FROM
+          devices
+        WHERE
+          id = $1
+        ;`,
+      values: [id],
+    });
+  }
+}
+
 const device = {
   create,
   listAll,
   findOneById,
   update,
+  Delete,
 };
 
 export default device;

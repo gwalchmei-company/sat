@@ -157,6 +157,7 @@ const featuresRoles = {
     "create:user",
     "read:devices",
     "update:devices",
+    "delete:devices",
 
     "read:user",
     "read:user:self",
