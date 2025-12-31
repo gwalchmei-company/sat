@@ -165,6 +165,8 @@ const featuresRoles = {
     "update:user",
     "update:user:self",
     "update:user:others",
+
+    "create:financialexpenses",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -179,6 +181,8 @@ const featuresRoles = {
     "update:user:self",
     "update:user:others",
     "update:devices",
+
+    "create:financialexpenses",
   ],
   operator: [
     ...DefaultUserFeatures,
