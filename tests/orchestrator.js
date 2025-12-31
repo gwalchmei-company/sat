@@ -1,10 +1,11 @@
 import retry from "async-retry";
-import { faker } from "@faker-js/faker";
-
+import { faker, fakerPT_BR } from "@faker-js/faker/";
 import database from "infra/database.js";
 import migrator from "models/migrator.js";
 import user from "models/user.js";
 import session from "models/session.js";
+import { cpf } from "cpf-cnpj-validator";
+import device from "models/device";
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
 
@@ -57,6 +58,13 @@ async function createUser(userObject) {
       userObject?.username || faker.internet.username().replace(/[_.-]/g, ""),
     email: userObject?.email || faker.internet.email(),
     password: userObject?.password || "validpassword",
+    cpf: userObject?.cpf || cpf.generate(false),
+    phone:
+      userObject?.phone ||
+      fakerPT_BR.phone.number({
+        style: "national",
+      }),
+    address: userObject?.address || faker.location.streetAddress(),
   });
 }
 
@@ -102,6 +110,22 @@ function extractUUID(text) {
   return match ? match[0] : null;
 }
 
+async function createDevice(deviceObject) {
+  return await device.create({
+    email_acc: deviceObject?.email_acc || faker.internet.email(),
+    utid_device: deviceObject?.utid_device || faker.database.mongodbObjectId(),
+    serial_number:
+      deviceObject?.serial_number || faker.database.mongodbObjectId(),
+    serial_number_router:
+      deviceObject?.serial_number_router || faker.database.mongodbObjectId(),
+    model: deviceObject?.model || "Kit Standart",
+    provider: deviceObject?.provider || "Starlink",
+    tracker_code: deviceObject?.tracker_code || faker.location.zipCode(),
+    status: deviceObject?.status || "available",
+    notes: deviceObject?.notes || faker.lorem.text(),
+  });
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -112,6 +136,12 @@ const orchestrator = {
   getLastEmail,
   extractUUID,
   activateUser,
+  cpf: {
+    isValid: cpf.isValid,
+    format: cpf.format,
+    generate: cpf.generate,
+  },
+  createDevice,
 };
 
 export default orchestrator;

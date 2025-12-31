@@ -1,0 +1,259 @@
+import database from "infra/database";
+import { NotFoundError, ValidationError } from "infra/errors";
+import { validate as uuidIsValid } from "uuid";
+
+async function listAll() {
+  const deviceList = await runSelectQuery();
+
+  return deviceList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          devices
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
+async function create(deviceInputValues) {
+  await validateUniqueUTID(deviceInputValues.utid_device);
+  await validateUniqueSerialNumber(deviceInputValues.serial_number);
+
+  if (!deviceInputValues.email_acc) {
+    throw new ValidationError({
+      message:
+        "Email vinculado a ACC do equipamento não foi informado ou inválido.",
+      action: "Insira um email válido para realizar esta operação.",
+    });
+  }
+
+  if (!deviceInputValues.utid_device) {
+    throw new ValidationError({
+      message: "UTID do equipamento não foi informado ou inválido.",
+      action: "Insira um UTID válido para realizar esta operação.",
+    });
+  }
+
+  if (!deviceInputValues.serial_number) {
+    throw new ValidationError({
+      message: "S/N não foi informado ou inválido.",
+      action: "Insira um S/N válido para realizar esta operação.",
+    });
+  }
+
+  if (!deviceInputValues.serial_number_router) {
+    throw new ValidationError({
+      message: "S/N do roteador não foi informado ou inválido.",
+      action: "Insira um S/N do roteador válido para realizar esta operação.",
+    });
+  }
+
+  if (!deviceInputValues.model) {
+    throw new ValidationError({
+      message: "Modelo do equipamento não foi informado.",
+      action: "Insira o modelo para realizar esta operação.",
+    });
+  }
+
+  if (deviceInputValues.status) {
+    const isValid = ["available", "rented", "maintenance", "blocked"].includes(
+      deviceInputValues.status,
+    );
+
+    if (!isValid) {
+      throw new ValidationError({
+        message: "Valor de status não é válido.",
+        action:
+          "Escolha entre 'available', 'rented', 'maintenance', 'blocked' para continuar.",
+      });
+    }
+  }
+
+  const newDevice = await runInsertQuery(deviceInputValues);
+  return newDevice;
+
+  async function runInsertQuery(deviceInputValues) {
+    const results = await database.query({
+      text: `
+        INSERT INTO
+          devices (email_acc, utid_device, serial_number, serial_number_router, model, provider, tracker_code, status, notes)
+        VALUES
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING
+          *
+        ;`,
+      values: [
+        deviceInputValues.email_acc,
+        deviceInputValues.utid_device,
+        deviceInputValues.serial_number,
+        deviceInputValues.serial_number_router,
+        deviceInputValues.model,
+        deviceInputValues.provider,
+        deviceInputValues.tracker_code,
+        deviceInputValues.status,
+        deviceInputValues.notes,
+      ],
+    });
+    return results.rows[0];
+  }
+}
+
+async function validateUniqueUTID(utidDevice) {
+  const results = await database.query({
+    text: `
+      SELECT
+        utid_device
+      FROM
+        devices
+      WHERE
+        LOWER(utid_device) = LOWER($1)
+      ;`,
+    values: [utidDevice],
+  });
+
+  if (results.rowCount > 0) {
+    throw new ValidationError({
+      message: "O UTID informado já está sendo utilizado.",
+      action: "Utilize outro UTID para realizar esta operação.",
+    });
+  }
+}
+
+async function validateUniqueSerialNumber(serialNumber) {
+  const results = await database.query({
+    text: `
+      SELECT
+        serial_number
+      FROM
+        devices
+      WHERE
+        LOWER(serial_number) = LOWER($1)
+      ;`,
+    values: [serialNumber],
+  });
+
+  if (results.rowCount > 0) {
+    throw new ValidationError({
+      message: "O S/N informado já está sendo utilizado.",
+      action: "Utilize outro S/N para realizar esta operação.",
+    });
+  }
+}
+
+async function findOneById(id) {
+  if (!uuidIsValid(id)) {
+    throw new ValidationError({
+      message: "O id informado não foi encontrado ou é inválido.",
+      action: "Verifique o id e tente novamente.",
+    });
+  }
+
+  const deviceFound = await runSelectQuery(id);
+  return deviceFound;
+
+  async function runSelectQuery(id) {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          devices
+        WHERE
+          id = $1
+        LIMIT
+          1
+        ;`,
+      values: [id],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O id informado não foi encontrado no sistema.",
+        action: "Verifique se o id está digitado corretamente.",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function update(id, deviceInputValues) {
+  const currentDevice = await findOneById(id);
+
+  const deviceWithNewValues = { ...currentDevice, ...deviceInputValues };
+
+  const updatedDevice = await runUpdateQuery(deviceWithNewValues);
+  return updatedDevice;
+
+  async function runUpdateQuery(deviceWithNewValues) {
+    const results = await database.query({
+      text: `
+        UPDATE
+          devices
+        SET
+          email_acc = $2,
+          utid_device = $3,
+          serial_number = $4,
+          serial_number_router = $5,
+          model = $6,
+          provider = $7,
+          tracker_code = $8,
+          status = $9,
+          notes = $10,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+        RETURNING
+          *
+      `,
+      values: [
+        deviceWithNewValues.id,
+        deviceWithNewValues.email_acc,
+        deviceWithNewValues.utid_device,
+        deviceWithNewValues.serial_number,
+        deviceWithNewValues.serial_number_router,
+        deviceWithNewValues.model,
+        deviceWithNewValues.provider,
+        deviceWithNewValues.tracker_code,
+        deviceWithNewValues.status,
+        deviceWithNewValues.notes,
+      ],
+    });
+    return results.rows[0];
+  }
+}
+
+async function Delete(id) {
+  const deviceToDelete = await findOneById(id);
+
+  await runDeleteQuery(deviceToDelete.id);
+  return;
+
+  async function runDeleteQuery(id) {
+    await database.query({
+      text: `
+        DELETE FROM
+          devices
+        WHERE
+          id = $1
+        ;`,
+      values: [id],
+    });
+  }
+}
+
+const device = {
+  create,
+  listAll,
+  findOneById,
+  update,
+  Delete,
+};
+
+export default device;

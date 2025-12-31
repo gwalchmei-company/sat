@@ -1,53 +1,56 @@
 exports.up = (pgm) => {
-  pgm.createTable("users", {
+  pgm.createTable("devices", {
     id: {
       type: "uuid",
       primaryKey: true,
       default: pgm.func("gen_random_uuid()"),
     },
 
-    // For reference, GitHub limits usernames to 39 characters.
-    username: {
-      type: "varchar(30)",
+    email_acc: {
+      type: "varchar(254)",
       notNull: true,
-      unique: true,
     },
 
-    // Why 254 in length? https://stackoverflow.com/a/1199238
-    email: {
+    utid_device: {
       type: "varchar(254)",
       notNull: true,
       unique: true,
     },
 
-    // Why 60 in length? https://www.npmjs.com/package/bcrypt#hash-info
-    password: {
-      type: "varchar(60)",
-      notNull: true,
-    },
-    features: {
-      type: "varchar[]",
-      notNull: true,
-      default: "{}",
-    },
-    cpf: {
-      type: "varchar(30)",
+    serial_number: {
+      type: "varchar(254)",
       notNull: true,
       unique: true,
     },
-    phone: {
-      type: "varchar(30)",
+
+    serial_number_router: {
+      type: "varchar(254)",
       notNull: true,
     },
-    address: {
-      type: "text",
+
+    model: {
+      type: "varchar(100)",
       notNull: true,
     },
+
+    provider: {
+      type: "varchar(254)",
+    },
+
+    tracker_code: {
+      type: "varchar(254)",
+    },
+
+    status: {
+      type: "varchar(60)",
+      notNull: true,
+      default: "available",
+    },
+
     notes: {
       type: "text",
     },
 
-    // Why timestamp with timezone? https://justatheory.com/2012/04/postgres-use-timestamptz/
     created_at: {
       type: "timestamptz",
       notNull: true,

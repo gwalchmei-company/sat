@@ -57,6 +57,10 @@ describe("GET /api/v1/user", () => {
         email: createdUser.email,
         password: createdUser.password,
         features: ["create:session", "read:session"],
+        cpf: createdUser.cpf,
+        phone: createdUser.phone,
+        address: createdUser.address,
+        notes: createdUser.notes,
         created_at: responseBody.created_at,
         updated_at: activatedUser.updated_at.toISOString(),
       });
@@ -122,6 +126,10 @@ describe("GET /api/v1/user", () => {
         email: createdUser.email,
         password: createdUser.password,
         features: ["create:session", "read:session"],
+        cpf: createdUser.cpf,
+        phone: createdUser.phone,
+        address: createdUser.address,
+        notes: createdUser.notes,
         created_at: responseBody.created_at,
         updated_at: activatedUser.updated_at.toISOString(),
       });

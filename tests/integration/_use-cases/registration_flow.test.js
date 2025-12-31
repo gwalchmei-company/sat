@@ -17,6 +17,7 @@ describe("Use case: Registration Flow (all successfull)", () => {
   let tokenSessionId;
 
   test("Create user account", async () => {
+    const cpf = orchestrator.cpf.generate(false);
     const createUserResponse = await fetch(
       "http://localhost:3000/api/v1/users",
       {
@@ -28,6 +29,9 @@ describe("Use case: Registration Flow (all successfull)", () => {
           username: "RegistrationFlow",
           email: "registration.flow@gwalchmei.com.br",
           password: "RegistrationFlowPassword",
+          cpf,
+          address: "rua tal, cidade tal, estado tal, pais tal",
+          phone: "91984546411",
         }),
       },
     );
@@ -42,6 +46,10 @@ describe("Use case: Registration Flow (all successfull)", () => {
       email: "registration.flow@gwalchmei.com.br",
       password: createUserResponseBody.password,
       features: ["read:activation_token"],
+      cpf: createUserResponseBody.cpf,
+      phone: createUserResponseBody.phone,
+      address: createUserResponseBody.address,
+      notes: createUserResponseBody.notes,
       created_at: createUserResponseBody.created_at,
       updated_at: createUserResponseBody.updated_at,
     });
@@ -65,8 +73,6 @@ describe("Use case: Registration Flow (all successfull)", () => {
 
     const activationTokenObject =
       await activation.findOneValidById(activationTokenId);
-
-    console.log(activationTokenObject);
 
     expect(activationTokenObject.user_id).toBe(createUserResponseBody.id);
     expect(activationTokenObject.use_at).toBe(null);
