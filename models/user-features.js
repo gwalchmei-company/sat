@@ -20,6 +20,12 @@ const availableFeatures = new Set([
   "update:devices",
   "update:devices:status",
   "delete:devices",
+
+  // FINANCIAL EXPENSES
+  "create:financialexpenses",
+  "read:financialexpenses",
+  "update:financialexpenses",
+  "delete:financialexpenses",
 ]);
 
 export default Object.freeze(availableFeatures);

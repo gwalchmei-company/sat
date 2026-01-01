@@ -1,6 +1,5 @@
 import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator.js";
-import user from "models/user";
 import authorization from "models/authorization";
 
 beforeAll(async () => {
@@ -16,11 +15,6 @@ describe("GET /api/v1/users/:username", () => {
 
       const response = await fetch(
         `http://localhost:3000/api/v1/users/${userCreated.username}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
       );
 
       expect(response.status).toBe(403);
@@ -36,22 +30,14 @@ describe("GET /api/v1/users/:username", () => {
 
   describe("Customer user", () => {
     test("Self user data", async () => {
-      const userCreated = await orchestrator.createUser({
-        username: "customerUserSelf",
-      });
-      const activatedUser = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.customer,
-      );
+      const { session, user } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/customerUserSelf",
+        `http://localhost:3000/api/v1/users/${user.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
@@ -60,14 +46,14 @@ describe("GET /api/v1/users/:username", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "customerUserSelf",
-        email: activatedUser.email,
+        username: user.username,
+        email: user.email,
         password: responseBody.password,
         features: authorization.featuresRoles.customer,
-        cpf: activatedUser.cpf,
-        phone: activatedUser.phone,
-        address: activatedUser.address,
-        notes: activatedUser.notes,
+        cpf: user.cpf,
+        phone: user.phone,
+        address: user.address,
+        notes: user.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -78,13 +64,8 @@ describe("GET /api/v1/users/:username", () => {
     });
 
     test("reatriving other user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.customer,
-      );
+      const { session } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       await orchestrator.createUser({
         username: "otherUser",
@@ -94,8 +75,7 @@ describe("GET /api/v1/users/:username", () => {
         "http://localhost:3000/api/v1/users/otherUser",
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
@@ -112,23 +92,14 @@ describe("GET /api/v1/users/:username", () => {
     });
 
     test("With exact case match", async () => {
-      const createdUser = await orchestrator.createUser({
-        username: "MesmoCase",
-      });
-
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(
-        createdUser.id,
-        authorization.featuresRoles.customer,
-      );
+      const { session, user } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/MesmoCase",
+        `http://localhost:3000/api/v1/users/${user.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
@@ -139,14 +110,14 @@ describe("GET /api/v1/users/:username", () => {
 
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "MesmoCase",
-        email: createdUser.email,
+        username: user.username,
+        email: user.email,
         password: responseBody.password,
         features: authorization.featuresRoles.customer,
-        cpf: createdUser.cpf,
-        phone: createdUser.phone,
-        address: createdUser.address,
-        notes: createdUser.notes,
+        cpf: user.cpf,
+        phone: user.phone,
+        address: user.address,
+        notes: user.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -157,40 +128,30 @@ describe("GET /api/v1/users/:username", () => {
     });
 
     test("With case mismatch", async () => {
-      const createdUser = await orchestrator.createUser({
-        username: "CaseDiferente",
-      });
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(
-        createdUser.id,
-        authorization.featuresRoles.customer,
-      );
+      const { session, user } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/casediferente",
+        `http://localhost:3000/api/v1/users/${user.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
 
       expect(response.status).toBe(200);
-
       const responseBody = await response.json();
-
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "CaseDiferente",
-        email: createdUser.email,
+        username: user.username,
+        email: user.email,
         password: responseBody.password,
         features: authorization.featuresRoles.customer,
-        cpf: createdUser.cpf,
-        phone: createdUser.phone,
-        address: createdUser.address,
-        notes: createdUser.notes,
+        cpf: user.cpf,
+        phone: user.phone,
+        address: user.address,
+        notes: user.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -203,25 +164,18 @@ describe("GET /api/v1/users/:username", () => {
 
   describe("Admin user", () => {
     test("reatriving other user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(userCreated.id, authorization.featuresRoles.admin);
-
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
       const otherUser = await orchestrator.createUser();
-
       const response = await fetch(
         `http://localhost:3000/api/v1/users/${otherUser.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
 
       expect(response.status).toBe(200);
-
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
@@ -242,25 +196,18 @@ describe("GET /api/v1/users/:username", () => {
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
     });
     test("With nonexistent username", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
-
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
       const response = await fetch(
         "http://localhost:3000/api/v1/users/nonexistent",
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
 
       expect(response.status).toBe(404);
-
       const responseBody = await response.json();
-
       expect(responseBody).toEqual({
         name: "NotFoundError",
         message: "O username informado não foi encontrado no sistema.",
@@ -272,22 +219,13 @@ describe("GET /api/v1/users/:username", () => {
 
   describe("Manager user", () => {
     test("Self user data", async () => {
-      const userCreated = await orchestrator.createUser({
-        username: "managerUserself",
-      });
-      const activatedUser = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.manager,
-      );
-
+      const { session, user } =
+        await orchestrator.createAuthenticatedUser("manager");
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/managerUserself",
+        `http://localhost:3000/api/v1/users/${user.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
@@ -296,14 +234,14 @@ describe("GET /api/v1/users/:username", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "managerUserself",
-        email: activatedUser.email,
+        username: user.username,
+        email: user.email,
         password: responseBody.password,
         features: authorization.featuresRoles.manager,
-        cpf: activatedUser.cpf,
-        phone: activatedUser.phone,
-        address: activatedUser.address,
-        notes: activatedUser.notes,
+        cpf: user.cpf,
+        phone: user.phone,
+        address: user.address,
+        notes: user.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -314,28 +252,18 @@ describe("GET /api/v1/users/:username", () => {
     });
 
     test("reatriving other user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.manager,
-      );
-
+      const { session } = await orchestrator.createAuthenticatedUser("manager");
       const otherUser = await orchestrator.createUser();
-
       const response = await fetch(
         `http://localhost:3000/api/v1/users/${otherUser.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
 
       expect(response.status).toBe(200);
-
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
@@ -350,7 +278,6 @@ describe("GET /api/v1/users/:username", () => {
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
-
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
@@ -359,22 +286,13 @@ describe("GET /api/v1/users/:username", () => {
 
   describe("Operator user", () => {
     test("Self user data", async () => {
-      const userCreated = await orchestrator.createUser({
-        username: "operatorUserSelf",
-      });
-      const activatedUser = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.operator,
-      );
-
+      const { session, user } =
+        await orchestrator.createAuthenticatedUser("operator");
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/operatorUserSelf",
+        `http://localhost:3000/api/v1/users/${user.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
@@ -383,46 +301,36 @@ describe("GET /api/v1/users/:username", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "operatorUserSelf",
-        email: activatedUser.email,
+        username: user.username,
+        email: user.email,
         password: responseBody.password,
         features: authorization.featuresRoles.operator,
-        cpf: activatedUser.cpf,
-        phone: activatedUser.phone,
-        address: activatedUser.address,
-        notes: activatedUser.notes,
+        cpf: user.cpf,
+        phone: user.phone,
+        address: user.address,
+        notes: user.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
-
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
     });
 
     test("reatriving other user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.operator,
-      );
-
+      const { session } =
+        await orchestrator.createAuthenticatedUser("operator");
       const otherUser = await orchestrator.createUser();
-
       const response = await fetch(
         `http://localhost:3000/api/v1/users/${otherUser.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
 
       expect(response.status).toBe(200);
-
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
@@ -446,22 +354,13 @@ describe("GET /api/v1/users/:username", () => {
 
   describe("Support user", () => {
     test("Self user data", async () => {
-      const userCreated = await orchestrator.createUser({
-        username: "supportUserSelf",
-      });
-      const activatedUser = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.support,
-      );
-
+      const { session, user } =
+        await orchestrator.createAuthenticatedUser("support");
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/supportUserSelf",
+        `http://localhost:3000/api/v1/users/${user.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
@@ -470,46 +369,35 @@ describe("GET /api/v1/users/:username", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "supportUserSelf",
-        email: activatedUser.email,
+        username: user.username,
+        email: user.email,
         password: responseBody.password,
         features: authorization.featuresRoles.support,
-        cpf: activatedUser.cpf,
-        phone: activatedUser.phone,
-        address: activatedUser.address,
-        notes: activatedUser.notes,
+        cpf: user.cpf,
+        phone: user.phone,
+        address: user.address,
+        notes: user.notes,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
-
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
     });
 
     test("reatriving other user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.support,
-      );
-
+      const { session } = await orchestrator.createAuthenticatedUser("support");
       const otherUser = await orchestrator.createUser();
-
       const response = await fetch(
         `http://localhost:3000/api/v1/users/${otherUser.username}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
         },
       );
 
       expect(response.status).toBe(200);
-
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
