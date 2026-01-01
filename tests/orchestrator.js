@@ -9,6 +9,7 @@ import device from "models/device";
 import financial_expense, {
   FINANCIAL_EXPENSE_CATEGORIES,
 } from "models/financial-expenses";
+import authorization from "models/authorization";
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
 
@@ -143,6 +144,18 @@ async function createFinancialExpense(financialExpenseObject) {
   });
 }
 
+async function createAuthenticatedUser(role = "customer", userObject) {
+  const createdUser = await orchestrator.createUser(userObject);
+  await orchestrator.activateUser(createdUser);
+  const sessionObject = await orchestrator.createSession(createdUser.id);
+  await user.setFeatures(
+    createdUser.id,
+    authorization.featuresRoles[`${role}`],
+  );
+
+  return sessionObject;
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -160,6 +173,7 @@ const orchestrator = {
   },
   createDevice,
   createFinancialExpense,
+  createAuthenticatedUser,
 };
 
 export default orchestrator;

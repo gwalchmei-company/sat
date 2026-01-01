@@ -1,6 +1,4 @@
 import orchestrator from "tests/orchestrator.js";
-import user from "models/user.js";
-import authorization from "models/authorization";
 import { faker } from "@faker-js/faker";
 
 beforeAll(async () => {
@@ -44,13 +42,8 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Customer user", () => {
     test("deny create when user is customer", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(
-        createdUser.id,
-        authorization.featuresRoles.customer,
-      );
+      const sessionObject =
+        await orchestrator.createAuthenticatedUser("customer");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
@@ -85,10 +78,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Admin user", () => {
     test("create financial expense when user is admin", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
+      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
@@ -125,10 +115,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when description is missing", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
+      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -157,10 +144,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when amount_in_cents is negative", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
+      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -190,10 +174,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when amount_in_cents is missing", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
+      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -222,10 +203,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when paid_at is invalid", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
+      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -256,10 +234,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when due_date_at is invalid", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
+      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -291,10 +266,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail with invalid category", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
+      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -326,13 +298,8 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Manager user", () => {
     test("create financial expense when user is manager", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(
-        createdUser.id,
-        authorization.featuresRoles.manager,
-      );
+      const sessionObject =
+        await orchestrator.createAuthenticatedUser("manager");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
@@ -369,13 +336,8 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Operator user", () => {
     test("deny create when user is operator", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(
-        createdUser.id,
-        authorization.featuresRoles.operator,
-      );
+      const sessionObject =
+        await orchestrator.createAuthenticatedUser("operator");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
@@ -410,13 +372,8 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Support user", () => {
     test("deny create when user is support", async () => {
-      const createdUser = await orchestrator.createUser();
-      await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
-      await user.setFeatures(
-        createdUser.id,
-        authorization.featuresRoles.support,
-      );
+      const sessionObject =
+        await orchestrator.createAuthenticatedUser("support");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
