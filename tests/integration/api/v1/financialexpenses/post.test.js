@@ -42,7 +42,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Customer user", () => {
     test("deny create when user is customer", async () => {
-      const sessionObject =
+      const { session } =
         await orchestrator.createAuthenticatedUser("customer");
 
       const financialExpenseInput = {
@@ -58,7 +58,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify(financialExpenseInput),
         },
@@ -78,7 +78,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Admin user", () => {
     test("create financial expense when user is admin", async () => {
-      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
@@ -94,7 +94,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify(financialExpenseInput),
         },
@@ -115,7 +115,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when description is missing", async () => {
-      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -123,7 +123,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify({
             amount_in_cents: 1000,
@@ -144,7 +144,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when amount_in_cents is negative", async () => {
-      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -152,7 +152,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify({
             description: "Conta inválida",
@@ -174,7 +174,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when amount_in_cents is missing", async () => {
-      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -182,7 +182,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify({
             description: "Conta inválida",
@@ -203,7 +203,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when paid_at is invalid", async () => {
-      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -211,7 +211,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify({
             description: "Conta inválida",
@@ -234,7 +234,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail when due_date_at is invalid", async () => {
-      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -242,7 +242,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify({
             description: "Conta inválida",
@@ -266,7 +266,7 @@ describe("POST /api/v1/financialexpenses", () => {
     });
 
     test("fail with invalid category", async () => {
-      const sessionObject = await orchestrator.createAuthenticatedUser("admin");
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const response = await fetch(
         "http://localhost:3000/api/v1/financialexpenses",
@@ -274,7 +274,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify({
             description: "Teste",
@@ -298,8 +298,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Manager user", () => {
     test("create financial expense when user is manager", async () => {
-      const sessionObject =
-        await orchestrator.createAuthenticatedUser("manager");
+      const { session } = await orchestrator.createAuthenticatedUser("manager");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
@@ -314,7 +313,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify(financialExpenseInput),
         },
@@ -336,7 +335,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Operator user", () => {
     test("deny create when user is operator", async () => {
-      const sessionObject =
+      const { session } =
         await orchestrator.createAuthenticatedUser("operator");
 
       const financialExpenseInput = {
@@ -352,7 +351,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify(financialExpenseInput),
         },
@@ -372,8 +371,7 @@ describe("POST /api/v1/financialexpenses", () => {
 
   describe("Support user", () => {
     test("deny create when user is support", async () => {
-      const sessionObject =
-        await orchestrator.createAuthenticatedUser("support");
+      const { session } = await orchestrator.createAuthenticatedUser("support");
 
       const financialExpenseInput = {
         description: faker.lorem.sentence(),
@@ -388,7 +386,7 @@ describe("POST /api/v1/financialexpenses", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
+            Cookie: `session_id=${session.token}`,
           },
           body: JSON.stringify(financialExpenseInput),
         },
