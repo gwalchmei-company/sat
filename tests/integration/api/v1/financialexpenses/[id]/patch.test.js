@@ -12,7 +12,7 @@ beforeAll(async () => {
 
 describe("PATCH /api/v1/financialexpenses/:id", () => {
   describe("Anonymous user", () => {
-    test("With all device data valid", async () => {
+    test("With all expense data valid", async () => {
       const expense = await orchestrator.createFinancialExpense();
       const newValues = {
         description: faker.lorem.sentence(),
@@ -89,8 +89,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         status_code: 403,
       });
 
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
   });
 
@@ -132,8 +132,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         updated_at: responseBody.updated_at,
       });
 
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual({
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual({
         id: expense.id,
         description: newValues.description,
         amount_in_cents: newValues.amount_in_cents,
@@ -179,7 +179,7 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
       });
     });
 
-    test("With valid UUID but non-existent device", async () => {
+    test("With valid UUID but non-existent", async () => {
       const { session: sessionObject } =
         await orchestrator.createAuthenticatedUser("admin");
       const newValues = {
@@ -239,8 +239,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         status_code: 400,
       });
 
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
 
     test("With forbidden field", async () => {
@@ -272,8 +272,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         action: `Remova o campo "id" e tente novamente.`,
         status_code: 400,
       });
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
 
     test("Should not allow created_at update", async () => {
@@ -306,8 +306,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         action: 'Remova o campo "created_at" e tente novamente.',
         status_code: 400,
       });
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
 
     test("Should not allow updated_at update", async () => {
@@ -340,8 +340,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         action: 'Remova o campo "updated_at" e tente novamente.',
         status_code: 400,
       });
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
 
     test("Should not allow null values", async () => {
@@ -414,8 +414,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         status_code: 403,
       });
 
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
   });
 
@@ -457,8 +457,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         status_code: 403,
       });
 
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
   });
 
@@ -500,8 +500,8 @@ describe("PATCH /api/v1/financialexpenses/:id", () => {
         status_code: 403,
       });
 
-      const deviceAfter = await financial_expense.findOneById(expense.id);
-      expect(deviceAfter).toEqual(expense);
+      const expenseAfter = await financial_expense.findOneById(expense.id);
+      expect(expenseAfter).toEqual(expense);
     });
   });
 });
