@@ -1,5 +1,6 @@
 import database from "infra/database";
 import { ValidationError } from "infra/errors";
+import { validate as uuidIsValid } from "uuid";
 
 export const FINANCIAL_EXPENSE_CATEGORIES = [
   "utilities",
@@ -13,6 +14,35 @@ export const FINANCIAL_EXPENSE_CATEGORIES = [
   "marketing",
   "others",
 ];
+
+async function findOneById(id) {
+  if (!uuidIsValid(id)) {
+    throw new ValidationError({
+      message: "O id informado não foi encontrado ou é inválido.",
+      action: "Verifique o id e tente novamente.",
+    });
+  }
+
+  const financialExpense = await runSelectQuery(id);
+
+  return financialExpense;
+
+  async function runSelectQuery(id) {
+    const result = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          financial_expenses
+        WHERE
+          id = $1
+        ;`,
+      values: [id],
+    });
+
+    return result.rows[0];
+  }
+}
 
 async function listAll() {
   const financialExpensesList = await runSelectQuery();
@@ -129,6 +159,7 @@ async function create(financialExpenseInputValues) {
 const financial_expense = {
   create,
   listAll,
+  findOneById,
 };
 
 export default financial_expense;
