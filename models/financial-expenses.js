@@ -1,5 +1,5 @@
 import database from "infra/database";
-import { ValidationError } from "infra/errors";
+import { NotFoundError, ValidationError } from "infra/errors";
 import { validate as uuidIsValid } from "uuid";
 
 export const FINANCIAL_EXPENSE_CATEGORIES = [
@@ -39,6 +39,12 @@ async function findOneById(id) {
         ;`,
       values: [id],
     });
+    if (result.rows.length === 0) {
+      throw new NotFoundError({
+        message: "O id informado não foi encontrado ou é inválido.",
+        action: "Verifique o id e tente novamente.",
+      });
+    }
 
     return result.rows[0];
   }
@@ -156,10 +162,98 @@ async function create(financialExpenseInputValues) {
   }
 }
 
+async function update(id, financialExpenseInputValues) {
+  if (
+    !financialExpenseInputValues ||
+    Object.keys(financialExpenseInputValues).length === 0
+  ) {
+    throw new ValidationError({
+      message: "Nenhum valor foi informado para atualização.",
+      action: "Insira ao menos um campo válido para realizar esta operação.",
+    });
+  }
+
+  const currentExpense = await findOneById(id);
+  const expenseWithNewValues = {
+    ...currentExpense,
+    ...financialExpenseInputValues,
+  };
+
+  if (financialExpenseInputValues.id) {
+    throw new ValidationError({
+      message: `Não é permitido atualizar o campo "id".`,
+      action: `Remova o campo "id" e tente novamente.`,
+    });
+  }
+
+  if (
+    !financialExpenseInputValues.description ||
+    expenseWithNewValues.description === "" ||
+    expenseWithNewValues.description == null
+  ) {
+    throw new ValidationError({
+      message: "Descrição não foi informada ou inválida.",
+      action: "Insira uma descrição válida para realizar esta operação.",
+    });
+  }
+
+  if (financialExpenseInputValues.created_at) {
+    throw new ValidationError({
+      message: 'Não é permitido atualizar o campo "created_at".',
+      action: 'Remova o campo "created_at" e tente novamente.',
+    });
+  }
+
+  if (financialExpenseInputValues.updated_at) {
+    throw new ValidationError({
+      message: 'Não é permitido atualizar o campo "updated_at".',
+      action: 'Remova o campo "updated_at" e tente novamente.',
+    });
+  }
+
+  const financialExpenseUpdated = await runUpdateQuery(
+    id,
+    expenseWithNewValues,
+  );
+
+  return financialExpenseUpdated;
+
+  async function runUpdateQuery(id, financialExpenseInputValues) {
+    const financialExpenseUpdated = await database.query({
+      text: `
+      UPDATE
+        financial_expenses
+      SET
+        description = $1,
+        amount_in_cents = $2,
+        category = $3,
+        paid_at = $4,
+        due_date_at = $5,
+        updated_at = NOW()
+      WHERE
+        id = $6
+      RETURNING
+        *
+      ;`,
+      values: [
+        financialExpenseInputValues.description,
+        financialExpenseInputValues.amount_in_cents,
+        financialExpenseInputValues.category,
+        financialExpenseInputValues.paid_at,
+        financialExpenseInputValues.due_date_at,
+        id,
+      ],
+    });
+
+    return financialExpenseUpdated.rows[0];
+  }
+}
+
 const financial_expense = {
   create,
   listAll,
   findOneById,
+  update,
 };
 
 export default financial_expense;

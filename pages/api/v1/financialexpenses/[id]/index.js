@@ -6,6 +6,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:financialexpenses"), getHandler);
+router.patch(controller.canRequest("update:financialexpenses"), patchHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -15,4 +16,16 @@ async function getHandler(request, response) {
     await financial_expense.findOneById(financialExpenseId);
 
   return response.status(200).json(financialExpenseList);
+}
+
+async function patchHandler(request, response) {
+  const financialExpenseId = request.query.id;
+  const financialExpenseInputValues = request.body;
+
+  const financialExpenseUpdated = await financial_expense.update(
+    financialExpenseId,
+    financialExpenseInputValues,
+  );
+
+  return response.status(200).json(financialExpenseUpdated);
 }

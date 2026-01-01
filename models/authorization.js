@@ -168,6 +168,7 @@ const featuresRoles = {
 
     "create:financialexpenses",
     "read:financialexpenses",
+    "update:financialexpenses",
   ],
   manager: [
     ...DefaultUserFeatures,
