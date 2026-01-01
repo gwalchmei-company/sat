@@ -319,16 +319,14 @@ describe("POST /api/v1/financialexpenses", () => {
         },
       );
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(403);
       const responseBody = await response.json();
-      expect(responseBody).toMatchObject({
-        id: expect.any(String),
-        description: financialExpenseInput.description,
-        amount_in_cents: financialExpenseInput.amount_in_cents,
-        category: financialExpenseInput.category,
-        paid_at: financialExpenseInput.paid_at,
-        created_at: responseBody.created_at,
-        updated_at: responseBody.updated_at,
+      expect(responseBody).toEqual({
+        name: "ForbiddenError",
+        message: "Você não possui permissão para executar essa ação",
+        action:
+          'Verifique se seu usuário possui a feature "create:financialexpenses".',
+        status_code: 403,
       });
     });
   });

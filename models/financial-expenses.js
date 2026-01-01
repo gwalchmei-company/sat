@@ -14,6 +14,25 @@ export const FINANCIAL_EXPENSE_CATEGORIES = [
   "others",
 ];
 
+async function listAll() {
+  const financialExpensesList = await runSelectQuery();
+
+  return financialExpensesList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          financial_expenses
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
 async function create(financialExpenseInputValues) {
   const financialExpenseCreated = await runInsertQuery(
     financialExpenseInputValues,
@@ -109,6 +128,7 @@ async function create(financialExpenseInputValues) {
 
 const financial_expense = {
   create,
+  listAll,
 };
 
 export default financial_expense;
