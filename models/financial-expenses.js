@@ -249,11 +249,31 @@ async function update(id, financialExpenseInputValues) {
   }
 }
 
+async function Delete(id) {
+  const expenseToDelete = await findOneById(id);
+
+  await runDeleteQuery(expenseToDelete.id);
+  return;
+
+  async function runDeleteQuery(id) {
+    await database.query({
+      text: `
+        DELETE FROM
+          financial_expenses
+        WHERE
+          id = $1
+        ;`,
+      values: [id],
+    });
+  }
+}
+
 const financial_expense = {
   create,
   listAll,
   findOneById,
   update,
+  Delete,
 };
 
 export default financial_expense;

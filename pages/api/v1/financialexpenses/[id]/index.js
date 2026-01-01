@@ -7,6 +7,7 @@ const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:financialexpenses"), getHandler);
 router.patch(controller.canRequest("update:financialexpenses"), patchHandler);
+router.delete(controller.canRequest("delete:financialexpenses"), deleteHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -28,4 +29,11 @@ async function patchHandler(request, response) {
   );
 
   return response.status(200).json(financialExpenseUpdated);
+}
+
+async function deleteHandler(request, response) {
+  const financialExpenseId = request.query.id;
+  await financial_expense.Delete(financialExpenseId);
+
+  return response.status(204).end();
 }

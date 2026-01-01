@@ -25,6 +25,7 @@ const availableFeatures = new Set([
   "create:financialexpenses",
   "read:financialexpenses",
   "update:financialexpenses",
+  "delete:financialexpenses",
 ]);
 
 export default Object.freeze(availableFeatures);
