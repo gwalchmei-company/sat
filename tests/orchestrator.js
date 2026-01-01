@@ -147,15 +147,15 @@ async function createFinancialExpense(financialExpenseObject) {
 async function createAuthenticatedUser(role = "customer", userObject) {
   const createdUser = await orchestrator.createUser(userObject);
   const activatedUser = await orchestrator.activateUser(createdUser);
-  const sessionObject = await orchestrator.createSession(createdUser.id);
-  await user.setFeatures(
-    createdUser.id,
+  const sessionObject = await orchestrator.createSession(activatedUser.id);
+  const userWithFeatures = await user.setFeatures(
+    activatedUser.id,
     authorization.featuresRoles[`${role}`],
   );
 
   return {
     session: sessionObject,
-    user: activatedUser,
+    user: userWithFeatures,
   };
 }
 

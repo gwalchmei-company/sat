@@ -2,7 +2,6 @@ import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator.js";
 import user from "models/user.js";
 import password from "models/password.js";
-import authorization from "models/authorization";
 import { faker } from "@faker-js/faker/.";
 
 beforeAll(async () => {
@@ -285,19 +284,14 @@ describe("POST /api/v1/users", () => {
 
   describe("Customer user", () => {
     test("Should not be able to create a user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.customer,
-      );
+      const { session } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
+          Cookie: `session_id=${session.token}`,
         },
         body: JSON.stringify({
           username: "ryangwalchmei",
@@ -319,10 +313,7 @@ describe("POST /api/v1/users", () => {
 
   describe("Admin user", () => {
     test("Should be able to create a user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(userCreated.id, authorization.featuresRoles.admin);
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
 
       const userObjectValues = {
         username: faker.internet.username(),
@@ -337,7 +328,7 @@ describe("POST /api/v1/users", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
+          Cookie: `session_id=${session.token}`,
         },
         body: JSON.stringify(userObjectValues),
       });
@@ -377,13 +368,7 @@ describe("POST /api/v1/users", () => {
 
   describe("Manager user", () => {
     test("Should be able to create a user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.manager,
-      );
+      const { session } = await orchestrator.createAuthenticatedUser("manager");
 
       const userObjectValues = {
         username: faker.internet.username(),
@@ -398,7 +383,7 @@ describe("POST /api/v1/users", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
+          Cookie: `session_id=${session.token}`,
         },
         body: JSON.stringify(userObjectValues),
       });
@@ -438,19 +423,14 @@ describe("POST /api/v1/users", () => {
 
   describe("Operator user", () => {
     test("Should not be able to create a user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.operator,
-      );
+      const { session } =
+        await orchestrator.createAuthenticatedUser("operator");
 
       const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
+          Cookie: `session_id=${session.token}`,
         },
         body: JSON.stringify({
           username: "ryangwalchmei",
@@ -472,19 +452,13 @@ describe("POST /api/v1/users", () => {
 
   describe("Support user", () => {
     test("Should not be able to create a user", async () => {
-      const userCreated = await orchestrator.createUser();
-      await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
-      await user.setFeatures(
-        userCreated.id,
-        authorization.featuresRoles.support,
-      );
+      const { session } = await orchestrator.createAuthenticatedUser("support");
 
       const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${sessionObject.token}`,
+          Cookie: `session_id=${session.token}`,
         },
         body: JSON.stringify({
           username: "ryangwalchmei",

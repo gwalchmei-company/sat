@@ -28,13 +28,8 @@ describe("GET /api/v1/user", () => {
 
   describe("Default user", () => {
     test("With valid session", async () => {
-      const createdUser = await orchestrator.createUser({
-        username: "UserWithValidSession",
-      });
-
-      const activatedUser = await orchestrator.activateUser(createdUser);
-
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const { session: sessionObject, user: authenticatedUser } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       const response = await fetch("http://localhost:3000/api/v1/user", {
         headers: {
@@ -52,17 +47,17 @@ describe("GET /api/v1/user", () => {
       const responseBody = await response.json();
 
       expect(responseBody).toEqual({
-        id: createdUser.id,
-        username: "UserWithValidSession",
-        email: createdUser.email,
-        password: createdUser.password,
-        features: ["create:session", "read:session"],
-        cpf: createdUser.cpf,
-        phone: createdUser.phone,
-        address: createdUser.address,
-        notes: createdUser.notes,
-        created_at: responseBody.created_at,
-        updated_at: activatedUser.updated_at.toISOString(),
+        id: authenticatedUser.id,
+        username: authenticatedUser.username,
+        email: authenticatedUser.email,
+        password: authenticatedUser.password,
+        features: authenticatedUser.features,
+        cpf: authenticatedUser.cpf,
+        phone: authenticatedUser.phone,
+        address: authenticatedUser.address,
+        notes: authenticatedUser.notes,
+        created_at: authenticatedUser.created_at.toISOString(),
+        updated_at: authenticatedUser.updated_at.toISOString(),
       });
 
       expect(uuidVersion(responseBody.id)).toBe(4);
@@ -100,13 +95,8 @@ describe("GET /api/v1/user", () => {
         now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS / 2),
       });
 
-      const createdUser = await orchestrator.createUser({
-        username: "UserWithHalfwayExpiredSession",
-      });
-
-      const activatedUser = await orchestrator.activateUser(createdUser);
-
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const { session: sessionObject, user: authenticatedUser } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       jest.useRealTimers();
 
@@ -121,17 +111,17 @@ describe("GET /api/v1/user", () => {
       const responseBody = await response.json();
 
       expect(responseBody).toEqual({
-        id: createdUser.id,
-        username: "UserWithHalfwayExpiredSession",
-        email: createdUser.email,
-        password: createdUser.password,
-        features: ["create:session", "read:session"],
-        cpf: createdUser.cpf,
-        phone: createdUser.phone,
-        address: createdUser.address,
-        notes: createdUser.notes,
-        created_at: responseBody.created_at,
-        updated_at: activatedUser.updated_at.toISOString(),
+        id: authenticatedUser.id,
+        username: authenticatedUser.username,
+        email: authenticatedUser.email,
+        password: authenticatedUser.password,
+        features: authenticatedUser.features,
+        cpf: authenticatedUser.cpf,
+        phone: authenticatedUser.phone,
+        address: authenticatedUser.address,
+        notes: authenticatedUser.notes,
+        created_at: authenticatedUser.created_at.toISOString(),
+        updated_at: authenticatedUser.updated_at.toISOString(),
       });
 
       expect(uuidVersion(responseBody.id)).toBe(4);
@@ -204,11 +194,8 @@ describe("GET /api/v1/user", () => {
         now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS),
       });
 
-      const createdUser = await orchestrator.createUser({
-        username: "UserWithExpiredSession",
-      });
-
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const { session: sessionObject } =
+        await orchestrator.createAuthenticatedUser("customer");
 
       jest.useRealTimers();
 
