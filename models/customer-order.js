@@ -26,6 +26,34 @@ async function listAll() {
   }
 }
 
+async function listByCustomerId(customerId) {
+  const ordersList = await runSelectQuery(customerId);
+  return ordersList;
+
+  async function runSelectQuery(customerId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          customer_order.*,
+          users.username,
+          users.email,
+          users.cpf,
+          users.phone,
+          users.address,
+          users.created_at AS customer_created_at
+        FROM
+          customer_order
+          INNER JOIN users ON users.id = customer_order.customer_id
+        WHERE
+          customer_order.customer_id = $1
+        ;`,
+      values: [customerId],
+    });
+
+    return results.rows;
+  }
+}
+
 async function create(orderObject) {
   await validationFields(orderObject);
 
@@ -89,6 +117,7 @@ async function create(orderObject) {
 const customerOrder = {
   create,
   listAll,
+  listByCustomerId,
 };
 
 export default customerOrder;

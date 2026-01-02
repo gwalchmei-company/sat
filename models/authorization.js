@@ -198,6 +198,7 @@ const featuresRoles = {
     "update:user:self",
 
     "create:orders",
+    "read:orders:self",
   ],
   admin: [
     ...DefaultUserFeatures,

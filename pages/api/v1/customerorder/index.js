@@ -9,7 +9,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.post(controller.canRequest("create:orders"), postHandler);
-router.get(controller.canRequest("read:orders"), getHandler);
+router.get(getHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -40,7 +40,25 @@ async function postHandler(request, response) {
 }
 
 async function getHandler(request, response) {
-  const ordersList = await customerOrder.listAll();
+  const userLogged = request.context.user;
+
+  const canReadAll = authorization.can(userLogged, "read:orders");
+  const canReadOwn = authorization.can(userLogged, "read:orders:self");
+
+  if (!canReadAll && !canReadOwn) {
+    throw new ForbiddenError({
+      message: "Você não possui permissão para executar essa ação.",
+      action: 'Verifique a feature "read:orders" ou "read:orders:self".',
+    });
+  }
+
+  let ordersList;
+
+  if (canReadAll) {
+    ordersList = await customerOrder.listAll();
+  } else {
+    ordersList = await customerOrder.listByCustomerId(userLogged.id);
+  }
 
   return response.status(200).json(ordersList);
 }

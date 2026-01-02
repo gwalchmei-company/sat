@@ -17,17 +17,23 @@ describe("GET /api/v1/customerorder", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "ForbiddenError",
-        message: "Você não possui permissão para executar essa ação",
-        action: 'Verifique se seu usuário possui a feature "read:orders".',
+        message: "Você não possui permissão para executar essa ação.",
+        action: 'Verifique a feature "read:orders" ou "read:orders:self".',
         status_code: 403,
       });
     });
   });
 
   describe("customer user", () => {
-    test("should return 403 Forbidden", async () => {
-      const { session } =
+    test("should return own orders only", async () => {
+      const { session, user } =
         await orchestrator.createAuthenticatedUser("customer");
+
+      const custumerOrder = await orchestrator.createCustomerOrder({
+        customer_id: user.id,
+      });
+
+      await orchestrator.createCustomerOrder();
 
       const response = await fetch(
         `http://localhost:3000/api/v1/customerorder`,
@@ -39,19 +45,37 @@ describe("GET /api/v1/customerorder", () => {
         },
       );
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(200);
       const responseBody = await response.json();
-      expect(responseBody).toEqual({
-        name: "ForbiddenError",
-        message: "Você não possui permissão para executar essa ação",
-        action: 'Verifique se seu usuário possui a feature "read:orders".',
-        status_code: 403,
-      });
+      expect(Array.isArray(responseBody)).toBe(true);
+      expect(responseBody.length).toBe(1);
+      expect(responseBody).toEqual([
+        {
+          id: custumerOrder.id,
+          customer_id: custumerOrder.customer_id,
+          status: custumerOrder.status,
+          notes: custumerOrder.notes,
+          location_refer: custumerOrder.location_refer,
+          lat: custumerOrder.lat,
+          lng: custumerOrder.lng,
+          username: custumerOrder.username,
+          email: custumerOrder.email,
+          cpf: custumerOrder.cpf,
+          phone: custumerOrder.phone,
+          address: custumerOrder.address,
+          created_at: custumerOrder.created_at.toISOString(),
+          start_date: custumerOrder.start_date.toISOString(),
+          end_date: custumerOrder.end_date.toISOString(),
+          customer_created_at: custumerOrder.customer_created_at.toISOString(),
+        },
+      ]);
     });
   });
 
   describe("admin user", () => {
     test("should return 200 OK with customer orders list", async () => {
+      await orchestrator.clearDatabase();
+      await orchestrator.runPendingMigrations();
       const { session } = await orchestrator.createAuthenticatedUser("admin");
       const createdOrder = await orchestrator.createCustomerOrder();
 
@@ -161,6 +185,56 @@ describe("GET /api/v1/customerorder", () => {
       expect(first).not.toHaveProperty("password_hash");
       expect(first).not.toHaveProperty("secret_token");
     });
+
+    test("should return 200 OK with multiple customer orders", async () => {
+      await orchestrator.clearDatabase();
+      await orchestrator.runPendingMigrations();
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
+
+      const ordersToCreate = 5;
+      const createdOrders = [];
+      for (let i = 0; i < ordersToCreate; i++) {
+        const createdOrder = await orchestrator.createCustomerOrder();
+        createdOrders.push(createdOrder);
+      }
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/customerorder`,
+        {
+          method: "GET",
+          headers: {
+            Cookie: `session_id=${session.token}`,
+          },
+        },
+      );
+
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(Array.isArray(responseBody)).toBe(true);
+      expect(responseBody.length).toBe(ordersToCreate);
+      expect(responseBody).toEqual(
+        expect.arrayContaining(
+          createdOrders.map((order) => ({
+            id: order.id,
+            customer_id: order.customer_id,
+            status: order.status,
+            notes: order.notes,
+            location_refer: order.location_refer,
+            lat: order.lat,
+            lng: order.lng,
+            username: order.username,
+            email: order.email,
+            cpf: order.cpf,
+            phone: order.phone,
+            address: order.address,
+            created_at: order.created_at.toISOString(),
+            start_date: order.start_date.toISOString(),
+            end_date: order.end_date.toISOString(),
+            customer_created_at: order.customer_created_at.toISOString(),
+          })),
+        ),
+      );
+    });
   });
 
   describe("manager user", () => {
@@ -205,6 +279,56 @@ describe("GET /api/v1/customerorder", () => {
         },
       ]);
     });
+
+    test("should return 200 OK with multiple customer orders", async () => {
+      await orchestrator.clearDatabase();
+      await orchestrator.runPendingMigrations();
+      const { session } = await orchestrator.createAuthenticatedUser("manager");
+
+      const ordersToCreate = 5;
+      const createdOrders = [];
+      for (let i = 0; i < ordersToCreate; i++) {
+        const createdOrder = await orchestrator.createCustomerOrder();
+        createdOrders.push(createdOrder);
+      }
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/customerorder`,
+        {
+          method: "GET",
+          headers: {
+            Cookie: `session_id=${session.token}`,
+          },
+        },
+      );
+
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(Array.isArray(responseBody)).toBe(true);
+      expect(responseBody.length).toBe(ordersToCreate);
+      expect(responseBody).toEqual(
+        expect.arrayContaining(
+          createdOrders.map((order) => ({
+            id: order.id,
+            customer_id: order.customer_id,
+            status: order.status,
+            notes: order.notes,
+            location_refer: order.location_refer,
+            lat: order.lat,
+            lng: order.lng,
+            username: order.username,
+            email: order.email,
+            cpf: order.cpf,
+            phone: order.phone,
+            address: order.address,
+            created_at: order.created_at.toISOString(),
+            start_date: order.start_date.toISOString(),
+            end_date: order.end_date.toISOString(),
+            customer_created_at: order.customer_created_at.toISOString(),
+          })),
+        ),
+      );
+    });
   });
 
   describe("operator user", () => {
@@ -228,8 +352,8 @@ describe("GET /api/v1/customerorder", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "ForbiddenError",
-        message: "Você não possui permissão para executar essa ação",
-        action: 'Verifique se seu usuário possui a feature "read:orders".',
+        message: "Você não possui permissão para executar essa ação.",
+        action: 'Verifique a feature "read:orders" ou "read:orders:self".',
         status_code: 403,
       });
     });
@@ -256,8 +380,8 @@ describe("GET /api/v1/customerorder", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "ForbiddenError",
-        message: "Você não possui permissão para executar essa ação",
-        action: 'Verifique se seu usuário possui a feature "read:orders".',
+        message: "Você não possui permissão para executar essa ação.",
+        action: 'Verifique a feature "read:orders" ou "read:orders:self".',
         status_code: 403,
       });
     });
