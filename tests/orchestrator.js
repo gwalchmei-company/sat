@@ -10,6 +10,7 @@ import financial_expense, {
   FINANCIAL_EXPENSE_CATEGORIES,
 } from "models/financial-expenses";
 import authorization from "models/authorization";
+import customerOrder from "models/customer-order";
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
 
@@ -159,6 +160,23 @@ async function createAuthenticatedUser(role = "customer", userObject) {
   };
 }
 
+async function createCustomerOrder(orderObject) {
+  const createdUser = await orchestrator.createAuthenticatedUser();
+  return await customerOrder.create({
+    customer_id: orderObject?.customer_id || createdUser.user.id,
+    start_date: orderObject?.start_date || new Date().toISOString(),
+    end_date:
+      orderObject?.end_date ||
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    status: orderObject?.status || "pending",
+    notes: orderObject?.notes || faker.lorem.sentence(),
+    location_refer:
+      orderObject?.location_refer || faker.location.streetAddress(),
+    lat: orderObject?.lat || faker.location.latitude(),
+    lng: orderObject?.lng || faker.location.longitude(),
+  });
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -177,6 +195,7 @@ const orchestrator = {
   createDevice,
   createFinancialExpense,
   createAuthenticatedUser,
+  createCustomerOrder,
 };
 
 export default orchestrator;

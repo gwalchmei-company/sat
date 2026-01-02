@@ -93,6 +93,51 @@ function filterInput(user, feature, input, target) {
     };
   }
 
+  if (feature === "create:orders:status" && can(user, feature, target)) {
+    filteredInputValues = {
+      customer_id: input?.customer_id,
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      status: input?.status,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+  }
+
+  if (feature === "create:orders" && can(user, feature, target)) {
+    if (typeof input.status !== "undefined") {
+      const canSetStatus = can(user, "create:orders:status", target);
+
+      if (!canSetStatus) {
+        throw new ForbiddenError({
+          message:
+            "Você não possui permissão para definir o status deste pedido.",
+          action:
+            'Remova o campo "status" ou solicite a feature "create:orders:status".',
+        });
+      }
+    }
+
+    filteredInputValues = {
+      customer_id: input?.customer_id,
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+
+    if (
+      typeof input.status !== "undefined" &&
+      can(user, "create:orders:status", target)
+    ) {
+      filteredInputValues.status = input.status;
+    }
+  }
+
   // Force the clean up of "undefined" values
   return JSON.parse(JSON.stringify(filteredInputValues));
 }
@@ -151,6 +196,8 @@ const featuresRoles = {
     "read:user:self",
     "update:user",
     "update:user:self",
+
+    "create:orders",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -170,6 +217,10 @@ const featuresRoles = {
     "read:financialexpenses",
     "update:financialexpenses",
     "delete:financialexpenses",
+
+    "create:orders",
+    "create:orders:status",
+    "create:orders:others",
   ],
   manager: [
     ...DefaultUserFeatures,
