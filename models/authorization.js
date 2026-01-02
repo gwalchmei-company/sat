@@ -14,7 +14,11 @@ export function can(user, feature, resource = null) {
   if (!resource) return true;
 
   const resourceOwnerId =
-    resource.user_id || resource.owner_id || resource.created_by || resource.id;
+    resource.user_id ||
+    resource.customer_id ||
+    resource.owner_id ||
+    resource.created_by ||
+    resource.id;
 
   if (resourceOwnerId && user.id === resourceOwnerId) {
     return true;
@@ -259,6 +263,7 @@ const featuresRoles = {
     "read:user",
     "read:user:self",
     "read:user:others",
+    "read:orders",
   ],
 };
 
