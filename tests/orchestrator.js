@@ -162,7 +162,7 @@ async function createAuthenticatedUser(role = "customer", userObject) {
 
 async function createCustomerOrder(orderObject) {
   const createdUser = await orchestrator.createAuthenticatedUser();
-  return await customerOrder.create({
+  const createdOrder = await customerOrder.create({
     customer_id: orderObject?.customer_id || createdUser.user.id,
     start_date: orderObject?.start_date || new Date().toISOString(),
     end_date:
@@ -175,6 +175,10 @@ async function createCustomerOrder(orderObject) {
     lat: orderObject?.lat || faker.location.latitude(),
     lng: orderObject?.lng || faker.location.longitude(),
   });
+  const createdOrderWithCustomerData = await customerOrder
+    .listAll()
+    .then((orders) => orders.find((order) => order.id === createdOrder.id));
+  return createdOrderWithCustomerData;
 }
 
 const orchestrator = {

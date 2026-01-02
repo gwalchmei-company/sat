@@ -9,6 +9,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.post(controller.canRequest("create:orders"), postHandler);
+router.get(controller.canRequest("read:orders"), getHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -36,4 +37,10 @@ async function postHandler(request, response) {
   const createdRental = await customerOrder.create(valuesFiltered);
 
   return response.status(201).json(createdRental);
+}
+
+async function getHandler(request, response) {
+  const ordersList = await customerOrder.listAll();
+
+  return response.status(200).json(ordersList);
 }

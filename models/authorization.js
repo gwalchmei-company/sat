@@ -221,6 +221,8 @@ const featuresRoles = {
     "create:orders",
     "create:orders:status",
     "create:orders:others",
+
+    "read:orders",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -237,6 +239,8 @@ const featuresRoles = {
     "update:devices",
 
     "read:financialexpenses",
+
+    "read:orders",
   ],
   operator: [
     ...DefaultUserFeatures,

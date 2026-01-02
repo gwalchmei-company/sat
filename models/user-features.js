@@ -30,6 +30,7 @@ const availableFeatures = new Set([
   // CUSTOMER ORDERS
   "create:orders",
   "create:orders:status",
+  "read:orders",
 ]);
 
 export default Object.freeze(availableFeatures);

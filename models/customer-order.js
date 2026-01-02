@@ -1,6 +1,31 @@
 import database from "infra/database";
 import { ValidationError } from "infra/errors";
 
+async function listAll() {
+  const ordersList = await runSelectQuery();
+  return ordersList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          customer_order.*,
+          users.username,
+          users.email,
+          users.cpf,
+          users.phone,
+          users.address,
+          users.created_at AS customer_created_at
+        FROM
+          customer_order
+          INNER JOIN users ON users.id = customer_order.customer_id
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
 async function create(orderObject) {
   await validationFields(orderObject);
 
@@ -63,6 +88,7 @@ async function create(orderObject) {
 
 const customerOrder = {
   create,
+  listAll,
 };
 
 export default customerOrder;
