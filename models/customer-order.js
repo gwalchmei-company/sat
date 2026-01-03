@@ -28,6 +28,8 @@ async function listAll() {
         FROM
           customer_order
           INNER JOIN users ON users.id = customer_order.customer_id
+        WHERE
+          customer_order.deleted_at IS NULL
         ;`,
     });
 
@@ -54,7 +56,9 @@ async function listByCustomerId(customerId) {
           customer_order
           INNER JOIN users ON users.id = customer_order.customer_id
         WHERE
-          customer_order.customer_id = $1
+          customer_order.customer_id = $1 
+        AND 
+          customer_order.deleted_at IS NULL
         ;`,
       values: [customerId],
     });
@@ -257,12 +261,44 @@ async function update(orderId, orderObject) {
   }
 }
 
+async function Delete(orderId) {
+  const orderToDelete = await validateOrder(orderId);
+  await runDeleteQuery(orderToDelete.id);
+
+  async function runDeleteQuery(id) {
+    await database.query({
+      text: `
+        UPDATE 
+          customer_order
+        SET
+          deleted_at = timezone('utc', now())
+        WHERE id = $1
+        `,
+      values: [id],
+    });
+  }
+
+  async function validateOrder(orderId) {
+    const existingOrder = await findOneById(orderId);
+
+    if (existingOrder.deleted_at !== null) {
+      throw new NotFoundError({
+        message: "Pedido de cliente não encontrado ou inválido.",
+        action: "Verifique o id do pedido de cliente e tente novamente.",
+      });
+    }
+
+    return existingOrder;
+  }
+}
+
 const customerOrder = {
   create,
   listAll,
   listByCustomerId,
   findOneById,
   update,
+  Delete,
 };
 
 export default customerOrder;

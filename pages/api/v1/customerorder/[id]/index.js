@@ -9,6 +9,7 @@ const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
 router.get(getHandler);
 router.patch(controller.canRequest("update:orders"), patchHandler);
+router.delete(controller.canRequest("delete:orders"), deleteHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -66,4 +67,27 @@ async function patchHandler(request, response) {
   );
 
   return response.status(200).json(updatedOrder);
+}
+
+async function deleteHandler(request, response) {
+  const userLogged = request.context.user;
+  const orderRequestsId = request.query.id;
+  const targetOrder = await customerOrder.findOneById(orderRequestsId);
+  const isCompleted = targetOrder.status === "completed";
+
+  const canDeleteCompleted = authorization.can(
+    userLogged,
+    "delete:orders:completed",
+  );
+
+  if (isCompleted && !canDeleteCompleted) {
+    throw new ForbiddenError({
+      message: "Pedidos concluídos não podem ser excluídos.",
+      action: "Entre em contato caso precise de ajuda.",
+    });
+  }
+
+  await customerOrder.Delete(targetOrder.id);
+
+  return response.status(200).end();
 }

@@ -404,6 +404,7 @@ describe("PATCH /api/v1/customerorder/:id", () => {
         lng: -46.633308,
         created_at: anotherCustomerOrder.created_at.toISOString(),
         updated_at: responseBody.updated_at,
+        deleted_at: null,
       });
 
       const updatedOrderInDb = await customerOrder.findOneById(

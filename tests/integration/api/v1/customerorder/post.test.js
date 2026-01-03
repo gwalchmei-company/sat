@@ -82,6 +82,8 @@ describe("POST /api/v1/customerorder", () => {
         location_refer: customerOrderData.location_refer,
         lat: customerOrderData.lat,
         lng: customerOrderData.lng,
+        deleted_at: responseBody.deleted_at,
+        updated_at: responseBody.updated_at,
         created_at: responseBody.created_at,
       });
     });
@@ -313,6 +315,8 @@ describe("POST /api/v1/customerorder", () => {
         location_refer: customerOrderData.location_refer,
         lat: customerOrderData.lat,
         lng: customerOrderData.lng,
+        deleted_at: responseBody.deleted_at,
+        updated_at: responseBody.updated_at,
         created_at: responseBody.created_at,
       });
     });
@@ -357,6 +361,8 @@ describe("POST /api/v1/customerorder", () => {
         location_refer: incompleteCustomerOrderData.location_refer,
         lat: incompleteCustomerOrderData.lat,
         lng: incompleteCustomerOrderData.lng,
+        deleted_at: responseBody.deleted_at,
+        updated_at: responseBody.updated_at,
         created_at: responseBody.created_at,
       });
     });

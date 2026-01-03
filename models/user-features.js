@@ -36,5 +36,7 @@ const availableFeatures = new Set([
   "update:orders:others",
   "update:orders:self",
   "update:orders:status",
+  "delete:orders",
+  "delete:orders:completed",
 ]);
 export default Object.freeze(availableFeatures);

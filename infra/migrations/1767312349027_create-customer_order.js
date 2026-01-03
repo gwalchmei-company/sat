@@ -56,6 +56,10 @@ exports.up = (pgm) => {
       type: "timestamptz",
       default: pgm.func("timezone('utc', now())"),
     },
+    deleted_at: {
+      type: "timestamptz",
+      notNull: false,
+    },
   });
 };
 
