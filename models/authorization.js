@@ -14,7 +14,11 @@ export function can(user, feature, resource = null) {
   if (!resource) return true;
 
   const resourceOwnerId =
-    resource.user_id || resource.owner_id || resource.created_by || resource.id;
+    resource.user_id ||
+    resource.customer_id ||
+    resource.owner_id ||
+    resource.created_by ||
+    resource.id;
 
   if (resourceOwnerId && user.id === resourceOwnerId) {
     return true;
@@ -93,6 +97,102 @@ function filterInput(user, feature, input, target) {
     };
   }
 
+  if (feature === "create:orders:status" && can(user, feature, target)) {
+    filteredInputValues = {
+      customer_id: input?.customer_id,
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      status: input?.status,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+  }
+
+  if (feature === "create:orders" && can(user, feature, target)) {
+    if (typeof input.status !== "undefined") {
+      const canSetStatus = can(user, "create:orders:status", target);
+
+      if (!canSetStatus) {
+        throw new ForbiddenError({
+          message:
+            "Você não possui permissão para definir o status deste pedido.",
+          action:
+            'Remova o campo "status" ou solicite a feature "create:orders:status".',
+        });
+      }
+    }
+
+    filteredInputValues = {
+      customer_id: input?.customer_id,
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+
+    if (
+      typeof input.status !== "undefined" &&
+      can(user, "create:orders:status", target)
+    ) {
+      filteredInputValues.status = input.status;
+    }
+  }
+
+  if (feature === "update:orders:self" && can(user, feature, target)) {
+    if (typeof input.status !== "undefined") {
+      const canSetStatus = can(user, "update:orders:status", target);
+
+      if (!canSetStatus) {
+        const allowedFields = ["canceled"];
+        if (
+          allowedFields.includes(input.status) &&
+          user.id === target.customer_id
+        ) {
+          return { status: input.status };
+        }
+        throw new ForbiddenError({
+          message:
+            "Você não possui permissão para definir o status deste pedido.",
+          action:
+            'Remova o campo "status", verifique a feature "update:orders:status" ou se o pedido lhe pertence.',
+        });
+      }
+    }
+
+    if (target.status !== "pending") {
+      throw new ForbiddenError({
+        message: "Você não tem mais permissão para atualizar este pedido.",
+        action:
+          "Somente pedidos em análise podem ser atualizados pelo cliente.",
+      });
+    }
+
+    filteredInputValues = {
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+  }
+
+  if (feature === "update:orders:others" && can(user, feature, target)) {
+    filteredInputValues = {
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      status: input?.status,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+  }
+
   // Force the clean up of "undefined" values
   return JSON.parse(JSON.stringify(filteredInputValues));
 }
@@ -151,6 +251,11 @@ const featuresRoles = {
     "read:user:self",
     "update:user",
     "update:user:self",
+
+    "create:orders",
+    "read:orders:self",
+    "update:orders",
+    "update:orders:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -170,6 +275,16 @@ const featuresRoles = {
     "read:financialexpenses",
     "update:financialexpenses",
     "delete:financialexpenses",
+
+    "create:orders",
+    "create:orders:status",
+    "create:orders:others",
+
+    "read:orders",
+    "update:orders",
+    "update:orders:others",
+    "delete:orders",
+    "delete:orders:completed",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -186,6 +301,11 @@ const featuresRoles = {
     "update:devices",
 
     "read:financialexpenses",
+
+    "read:orders",
+    "update:orders",
+    "update:orders:others",
+    "delete:orders",
   ],
   operator: [
     ...DefaultUserFeatures,
@@ -203,6 +323,7 @@ const featuresRoles = {
     "read:user",
     "read:user:self",
     "read:user:others",
+    "read:orders",
   ],
 };
 

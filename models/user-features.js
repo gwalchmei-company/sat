@@ -26,6 +26,17 @@ const availableFeatures = new Set([
   "read:financialexpenses",
   "update:financialexpenses",
   "delete:financialexpenses",
-]);
 
+  // CUSTOMER ORDERS
+  "create:orders",
+  "create:orders:status",
+  "read:orders",
+  "read:orders:self",
+  "update:orders",
+  "update:orders:others",
+  "update:orders:self",
+  "update:orders:status",
+  "delete:orders",
+  "delete:orders:completed",
+]);
 export default Object.freeze(availableFeatures);
