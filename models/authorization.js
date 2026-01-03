@@ -142,6 +142,57 @@ function filterInput(user, feature, input, target) {
     }
   }
 
+  if (feature === "update:orders:self" && can(user, feature, target)) {
+    if (typeof input.status !== "undefined") {
+      const canSetStatus = can(user, "update:orders:status", target);
+
+      if (!canSetStatus) {
+        const allowedFields = ["canceled"];
+        if (
+          allowedFields.includes(input.status) &&
+          user.id === target.customer_id
+        ) {
+          return { status: input.status };
+        }
+        throw new ForbiddenError({
+          message:
+            "Você não possui permissão para definir o status deste pedido.",
+          action:
+            'Remova o campo "status", verifique a feature "update:orders:status" ou se o pedido lhe pertence.',
+        });
+      }
+    }
+
+    if (target.status !== "pending") {
+      throw new ForbiddenError({
+        message: "Você não tem mais permissão para atualizar este pedido.",
+        action:
+          "Somente pedidos em análise podem ser atualizados pelo cliente.",
+      });
+    }
+
+    filteredInputValues = {
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+  }
+
+  if (feature === "update:orders:others" && can(user, feature, target)) {
+    filteredInputValues = {
+      start_date: input?.start_date,
+      end_date: input?.end_date,
+      notes: input?.notes,
+      status: input?.status,
+      location_refer: input?.location_refer,
+      lat: input?.lat,
+      lng: input?.lng,
+    };
+  }
+
   // Force the clean up of "undefined" values
   return JSON.parse(JSON.stringify(filteredInputValues));
 }
@@ -203,6 +254,8 @@ const featuresRoles = {
 
     "create:orders",
     "read:orders:self",
+    "update:orders",
+    "update:orders:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -228,6 +281,8 @@ const featuresRoles = {
     "create:orders:others",
 
     "read:orders",
+    "update:orders",
+    "update:orders:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -246,6 +301,8 @@ const featuresRoles = {
     "read:financialexpenses",
 
     "read:orders",
+    "update:orders",
+    "update:orders:others",
   ],
   operator: [
     ...DefaultUserFeatures,

@@ -2,6 +2,14 @@ import database from "infra/database";
 import { NotFoundError, ValidationError } from "infra/errors";
 import { validate as isValidUuid } from "uuid";
 
+const CUSTOMER_ORDER_STATUSES = [
+  "pending",
+  "approved",
+  "rejected",
+  "completed",
+  "canceled",
+];
+
 async function listAll() {
   const ordersList = await runSelectQuery();
   return ordersList;
@@ -156,11 +164,105 @@ async function create(orderObject) {
   }
 }
 
+async function update(orderId, orderObject) {
+  await validateFields(orderObject);
+  const currentOrder = await findOneById(orderId);
+  const orderWithNewValues = { ...currentOrder, ...orderObject };
+
+  const updatedOrder = await runUpdateQuery(orderWithNewValues);
+  return updatedOrder;
+
+  async function runUpdateQuery(orderObject) {
+    const result = await database.query({
+      text: `
+        UPDATE 
+          customer_order
+        SET
+          customer_id = $1,
+          start_date = $2,
+          end_date = $3,
+          status = $4,
+          notes = $5,
+          location_refer = $6,
+          lat = $7,
+          lng = $8,
+          updated_at = timezone('utc', now())
+        WHERE id = $9
+        RETURNING *
+      `,
+      values: [
+        orderObject.customer_id,
+        orderObject.start_date,
+        orderObject.end_date,
+        orderObject.status,
+        orderObject.notes,
+        orderObject.location_refer,
+        orderObject.lat,
+        orderObject.lng,
+        orderObject.id,
+      ],
+    });
+
+    return result.rows[0];
+  }
+
+  async function validateFields(orderObject) {
+    if (!orderObject || Object.keys(orderObject).length === 0) {
+      throw new ValidationError({
+        message: "O corpo da requisição está vazio ou inválido.",
+        action: "Verifique os dados enviados e tente novamente.",
+        status_code: 400,
+      });
+    }
+
+    if (orderObject.status) {
+      if (!CUSTOMER_ORDER_STATUSES.includes(orderObject.status)) {
+        throw new ValidationError({
+          message: `O status informado é inválido.`,
+          action: `Verifique os status permitidos e tente novamente.`,
+        });
+      }
+    }
+
+    if (orderObject.lat) {
+      const isValidLat = orderObject.lat >= -90 && orderObject.lat <= 90;
+      if (!isValidLat) {
+        throw new ValidationError({
+          message: `A latitude informada é inválida.`,
+          action: `Verifique o valor da latitude e tente novamente.`,
+        });
+      }
+    }
+
+    if (orderObject.lng) {
+      const isValidLng = orderObject.lng >= -180 && orderObject.lng <= 180;
+      if (!isValidLng) {
+        throw new ValidationError({
+          message: `A longitude informada é inválida.`,
+          action: `Verifique o valor da longitude e tente novamente.`,
+        });
+      }
+    }
+
+    if (orderObject.start_date && orderObject.end_date) {
+      const startDate = new Date(orderObject.start_date);
+      const endDate = new Date(orderObject.end_date);
+      if (startDate >= endDate) {
+        throw new ValidationError({
+          message: `A data de término não pode ser anterior à data de início.`,
+          action: `Verifique as datas informadas e tente novamente.`,
+        });
+      }
+    }
+  }
+}
+
 const customerOrder = {
   create,
   listAll,
   listByCustomerId,
   findOneById,
+  update,
 };
 
 export default customerOrder;

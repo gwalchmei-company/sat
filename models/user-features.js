@@ -32,5 +32,9 @@ const availableFeatures = new Set([
   "create:orders:status",
   "read:orders",
   "read:orders:self",
+  "update:orders",
+  "update:orders:others",
+  "update:orders:self",
+  "update:orders:status",
 ]);
 export default Object.freeze(availableFeatures);

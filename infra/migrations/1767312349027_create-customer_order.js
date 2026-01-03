@@ -1,5 +1,12 @@
 exports.up = (pgm) => {
-  pgm.createType("customer_order_status", ["pending", "approved", "rejected"]);
+  pgm.createType("customer_order_status", [
+    "pending",
+    "approved",
+    "rejected",
+    "completed",
+    "canceled",
+  ]);
+
   pgm.createTable("customer_order", {
     id: {
       type: "uuid",
@@ -23,7 +30,7 @@ exports.up = (pgm) => {
     status: {
       type: "customer_order_status",
       notNull: true,
-      default: pgm.func("'pending'"),
+      default: pgm.func("('pending'::customer_order_status)"),
     },
     notes: {
       type: "text",
@@ -42,6 +49,10 @@ exports.up = (pgm) => {
       notNull: false,
     },
     created_at: {
+      type: "timestamptz",
+      default: pgm.func("timezone('utc', now())"),
+    },
+    updated_at: {
       type: "timestamptz",
       default: pgm.func("timezone('utc', now())"),
     },
