@@ -41,5 +41,8 @@ const availableFeatures = new Set([
 
   // RENTALS
   "create:rentals",
+  "read:rentals",
+  "read:rentals:self",
+  "read:rentals:others",
 ]);
 export default Object.freeze(availableFeatures);

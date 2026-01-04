@@ -256,6 +256,9 @@ const featuresRoles = {
     "read:orders:self",
     "update:orders",
     "update:orders:self",
+
+    "read:rentals",
+    "read:rentals:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -287,6 +290,8 @@ const featuresRoles = {
     "delete:orders:completed",
 
     "create:rentals",
+    "read:rentals",
+    "read:rentals:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -310,6 +315,8 @@ const featuresRoles = {
     "delete:orders",
 
     "create:rentals",
+    "read:rentals",
+    "read:rentals:others",
   ],
   operator: [
     ...DefaultUserFeatures,
@@ -320,6 +327,9 @@ const featuresRoles = {
     "read:user",
     "read:user:self",
     "read:user:others",
+
+    "read:rentals",
+    "read:rentals:others",
   ],
   support: [
     ...DefaultUserFeatures,
@@ -328,6 +338,9 @@ const featuresRoles = {
     "read:user:self",
     "read:user:others",
     "read:orders",
+
+    "read:rentals",
+    "read:rentals:others",
   ],
 };
 

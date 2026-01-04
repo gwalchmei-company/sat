@@ -13,6 +13,69 @@ const RENTAL_STATUSES = [
   "canceled",
 ];
 
+async function listAll() {
+  const rentalsList = await runSelectQuery();
+  return rentalsList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          rentals.*,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf,
+          users.phone
+        FROM
+          rentals
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          rentals.deleted_at IS NULL
+        ORDER BY
+          rentals.created_at DESC
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
+async function listByCustomerId(customerId) {
+  const rentalsList = await runSelectQuery(customerId);
+  return rentalsList;
+
+  async function runSelectQuery(customerId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          rentals.*,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf,
+          users.phone
+        FROM
+          rentals
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          rentals.customer_id = $1
+        AND
+          rentals.deleted_at IS NULL
+        ORDER BY
+          rentals.created_at DESC
+        ;`,
+      values: [customerId],
+    });
+
+    return results.rows;
+  }
+}
+
 async function create(rentalObject) {
   await validationFields(rentalObject);
   const createdRental = await runInsertQuery(rentalObject);
@@ -133,5 +196,7 @@ async function create(rentalObject) {
 }
 
 export default Object.freeze({
+  listAll,
+  listByCustomerId,
   create,
 });
