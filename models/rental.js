@@ -1,5 +1,5 @@
 import database from "infra/database";
-import { ValidationError } from "infra/errors";
+import { ValidationError, NotFoundError } from "infra/errors";
 import { validate as isValidUuid } from "uuid";
 import device from "models/device";
 import user from "models/user";
@@ -73,6 +73,59 @@ async function listByCustomerId(customerId) {
     });
 
     return results.rows;
+  }
+}
+
+async function findOneById(rentalId) {
+  if (!rentalId) {
+    throw new ValidationError({
+      message: "O id do aluguel não foi informado.",
+      action: "Informe o id do aluguel e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(rentalId)) {
+    throw new ValidationError({
+      message: "O id do aluguel não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const rentalFound = await runSelectQuery(rentalId);
+
+  if (!rentalFound) {
+    throw new NotFoundError({
+      message: "O aluguel não foi encontrado.",
+      action: "Verifique o id informado e tente novamente.",
+    });
+  }
+
+  return rentalFound;
+
+  async function runSelectQuery(rentalId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          rentals.*,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf,
+          users.phone
+        FROM
+          rentals
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          rentals.id = $1
+        AND
+          rentals.deleted_at IS NULL
+        ;`,
+      values: [rentalId],
+    });
+
+    return results.rows[0];
   }
 }
 
@@ -198,5 +251,6 @@ async function create(rentalObject) {
 export default Object.freeze({
   listAll,
   listByCustomerId,
+  findOneById,
   create,
 });
