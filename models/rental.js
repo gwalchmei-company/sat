@@ -248,9 +248,158 @@ async function create(rentalObject) {
   }
 }
 
+async function update(rentalId, rentalObject) {
+  const currentRental = await findOneById(rentalId);
+  await validateUpdateFields(rentalObject, currentRental);
+  const rentalWithNewValues = { ...currentRental, ...rentalObject };
+
+  const updatedRental = await runUpdateQuery(rentalWithNewValues);
+  return updatedRental;
+
+  async function runUpdateQuery(rentalObject) {
+    const result = await database.query({
+      text: `
+        UPDATE 
+          rentals
+        SET
+          device_id = $1,
+          customer_id = $2,
+          customer_order_id = $3,
+          start_date = $4,
+          end_date = $5,
+          status = $6,
+          notes = $7,
+          location_refer = $8,
+          lat = $9,
+          lng = $10,
+          updated_at = timezone('utc', now())
+        WHERE id = $11
+        RETURNING *
+      `,
+      values: [
+        rentalObject.device_id,
+        rentalObject.customer_id,
+        rentalObject.customer_order_id,
+        rentalObject.start_date,
+        rentalObject.end_date,
+        rentalObject.status,
+        rentalObject.notes,
+        rentalObject.location_refer,
+        rentalObject.lat,
+        rentalObject.lng,
+        rentalObject.id,
+      ],
+    });
+
+    return result.rows[0];
+  }
+
+  async function validateUpdateFields(rentalObject, currentRental) {
+    if (!rentalObject || Object.keys(rentalObject).length === 0) {
+      throw new ValidationError({
+        message: "O corpo da requisição está vazio ou inválido.",
+        action: "Verifique os dados enviados e tente novamente.",
+      });
+    }
+
+    if (rentalObject.device_id !== undefined) {
+      if (!isValidUuid(rentalObject.device_id)) {
+        throw new ValidationError({
+          message: "O id do dispositivo não é válido.",
+          action: "Verifique o id do dispositivo enviado e tente novamente.",
+        });
+      }
+      try {
+        await device.findOneById(rentalObject.device_id);
+      } catch (error) {
+        throw new NotFoundError({
+          message: "O dispositivo solicitado não foi encontrado no sistema.",
+          action:
+            "Verifique se o ID do dispositivo está correto e tente novamente.",
+        });
+      }
+    }
+
+    if (rentalObject.customer_id !== undefined) {
+      if (!isValidUuid(rentalObject.customer_id)) {
+        throw new ValidationError({
+          message: "O id do cliente não é válido.",
+          action: "Verifique o id do cliente enviado e tente novamente.",
+        });
+      }
+      try {
+        await user.findOneById(rentalObject.customer_id);
+      } catch (error) {
+        throw new NotFoundError({
+          message: "O usuário informado não foi encontrado no sistema.",
+          action:
+            "Verifique se o ID do usuário está correto e tente novamente.",
+        });
+      }
+    }
+
+    if (rentalObject.customer_order_id !== undefined) {
+      if (!isValidUuid(rentalObject.customer_order_id)) {
+        throw new ValidationError({
+          message: "O id do pedido não é válido.",
+          action: "Verifique o id do pedido enviado e tente novamente.",
+        });
+      }
+      await customerOrder.findOneById(rentalObject.customer_order_id);
+    }
+
+    if (rentalObject.start_date !== undefined) {
+      const startDate = new Date(rentalObject.start_date);
+      if (isNaN(startDate.getTime())) {
+        throw new ValidationError({
+          message: "A data de início não é válida.",
+          action: "Informe uma data de início válida e tente novamente.",
+        });
+      }
+    }
+
+    if (rentalObject.end_date !== undefined) {
+      const endDate = new Date(rentalObject.end_date);
+      if (isNaN(endDate.getTime())) {
+        throw new ValidationError({
+          message: "A data de término não é válida.",
+          action: "Informe uma data de término válida e tente novamente.",
+        });
+      }
+    }
+
+    // Validar relação entre start_date e end_date
+    const startDate =
+      rentalObject.start_date !== undefined
+        ? new Date(rentalObject.start_date)
+        : new Date(currentRental.start_date);
+    const endDate =
+      rentalObject.end_date !== undefined
+        ? new Date(rentalObject.end_date)
+        : new Date(currentRental.end_date);
+
+    if (endDate <= startDate) {
+      throw new ValidationError({
+        message: "A data de término deve ser posterior à data de início.",
+        action: "Verifique as datas e tente novamente.",
+      });
+    }
+
+    if (rentalObject.status !== undefined) {
+      if (!RENTAL_STATUSES.includes(rentalObject.status)) {
+        throw new ValidationError({
+          message: `O status "${rentalObject.status}" não é válido.`,
+          action: `Use um dos status válidos: ${RENTAL_STATUSES.join(", ")}.`,
+        });
+      }
+    }
+  }
+}
+
 export default Object.freeze({
   listAll,
   listByCustomerId,
   findOneById,
   create,
+  update,
 });

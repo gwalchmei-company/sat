@@ -110,6 +110,28 @@ function filterInput(user, feature, input, target) {
     };
   }
 
+  if (feature === "update:rentals" && can(user, feature, target)) {
+    const allowedFields = [
+      "device_id",
+      "customer_id",
+      "customer_order_id",
+      "start_date",
+      "end_date",
+      "status",
+      "notes",
+      "location_refer",
+      "lat",
+      "lng",
+    ];
+
+    filteredInputValues = {};
+    for (const field of allowedFields) {
+      if (field in input) {
+        filteredInputValues[field] = input[field];
+      }
+    }
+  }
+
   if (feature === "create:orders" && can(user, feature, target)) {
     if (typeof input.status !== "undefined") {
       const canSetStatus = can(user, "create:orders:status", target);
@@ -193,8 +215,15 @@ function filterInput(user, feature, input, target) {
     };
   }
 
-  // Force the clean up of "undefined" values
-  return JSON.parse(JSON.stringify(filteredInputValues));
+  // Remove undefined values
+  const cleanedInput = {};
+  for (const key in filteredInputValues) {
+    if (filteredInputValues[key] !== undefined) {
+      cleanedInput[key] = filteredInputValues[key];
+    }
+  }
+
+  return cleanedInput;
 }
 
 function validateInput(input) {
@@ -292,6 +321,8 @@ const featuresRoles = {
     "create:rentals",
     "read:rentals",
     "read:rentals:others",
+    "update:rentals",
+    "update:rentals:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -317,6 +348,8 @@ const featuresRoles = {
     "create:rentals",
     "read:rentals",
     "read:rentals:others",
+    "update:rentals",
+    "update:rentals:others",
   ],
   operator: [
     ...DefaultUserFeatures,
