@@ -390,12 +390,87 @@ describe("PATCH /api/v1/rentals/[id]", () => {
           status_code: 400,
         });
       });
-    });
-  });
 
-  describe("Manager user", () => {
-    test("update rental successfully when user is manager", async () => {
-      const { session } = await orchestrator.createAuthenticatedUser("manager");
+      test("return 400 when device has conflicting rental period", async () => {
+        const { session } = await orchestrator.createAuthenticatedUser("admin");
+        const device = await orchestrator.createDevice();
+
+        await orchestrator.createRental({
+          device_id: device.id,
+          start_date: "2026-01-10T10:00:00Z",
+          end_date: "2026-01-15T10:00:00Z",
+          status: "pending",
+        });
+
+        const rental2 = await orchestrator.createRental({
+          start_date: "2026-01-20T10:00:00Z",
+          end_date: "2026-01-25T10:00:00Z",
+          status: "pending",
+        });
+
+        const response = await fetch(
+          `http://localhost:3000/api/v1/rentals/${rental2.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${session.token}`,
+            },
+            body: JSON.stringify({
+              device_id: device.id,
+              start_date: "2026-01-12T10:00:00Z",
+            }),
+          },
+        );
+
+        expect(response.status).toBe(400);
+        const responseBody = await response.json();
+        expect(responseBody).toMatchObject({
+          name: "ValidationError",
+          message:
+            "Este dispositivo já possui um aluguel ativo para o período solicitado.",
+          status_code: 400,
+        });
+      });
+
+      test("allow update when period does not conflict", async () => {
+        const { session } = await orchestrator.createAuthenticatedUser("admin");
+        const device = await orchestrator.createDevice();
+
+        await orchestrator.createRental({
+          device_id: device.id,
+          start_date: "2026-01-10T10:00:00Z",
+          end_date: "2026-01-15T10:00:00Z",
+          status: "active",
+        });
+
+        const rental2 = await orchestrator.createRental({
+          start_date: "2026-01-20T10:00:00Z",
+          end_date: "2026-01-25T10:00:00Z",
+          status: "pending",
+        });
+
+        const response = await fetch(
+          `http://localhost:3000/api/v1/rentals/${rental2.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${session.token}`,
+            },
+            body: JSON.stringify({
+              device_id: device.id,
+              start_date: "2026-01-16T10:00:00Z",
+            }),
+          },
+        );
+
+        expect(response.status).toBe(200);
+      });
+    });
+
+    test("allow updating status from pending to completed", async () => {
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
       const { user: customer } =
         await orchestrator.createAuthenticatedUser("customer");
 

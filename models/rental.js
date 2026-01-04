@@ -245,6 +245,48 @@ async function create(rentalObject) {
     if (rentalObject.customer_order_id) {
       await customerOrder.findOneById(rentalObject.customer_order_id);
     }
+
+    // Validar conflito de períodos
+    await validateDeviceAvailability(
+      rentalObject.device_id,
+      rentalObject.start_date,
+      rentalObject.end_date,
+    );
+  }
+
+  async function validateDeviceAvailability(deviceId, startDate, endDate) {
+    const conflictingRentals = await database.query({
+      text: `
+        SELECT
+          id, start_date, end_date, status
+        FROM
+          rentals
+        WHERE
+          device_id = $1
+        AND
+          deleted_at IS NULL
+        AND
+          status NOT IN ('completed', 'canceled')
+        AND
+          (
+            (start_date <= $2 AND end_date > $2)
+            OR
+            (start_date < $3 AND end_date >= $3)
+            OR
+            (start_date >= $2 AND end_date <= $3)
+          )
+      `,
+      values: [deviceId, startDate, endDate],
+    });
+
+    if (conflictingRentals.rows.length > 0) {
+      const conflict = conflictingRentals.rows[0];
+      throw new ValidationError({
+        message:
+          "Este dispositivo já possui um aluguel ativo para o período solicitado.",
+        action: `O dispositivo está alugado de ${new Date(conflict.start_date).toLocaleDateString()} até ${new Date(conflict.end_date).toLocaleDateString()}.`,
+      });
+    }
   }
 }
 
@@ -392,6 +434,67 @@ async function update(rentalId, rentalObject) {
           action: `Use um dos status válidos: ${RENTAL_STATUSES.join(", ")}.`,
         });
       }
+    }
+
+    // Validar conflito de períodos (se device_id, start_date ou end_date foram alterados)
+    const deviceId =
+      rentalObject.device_id !== undefined
+        ? rentalObject.device_id
+        : currentRental.device_id;
+
+    if (
+      rentalObject.device_id !== undefined ||
+      rentalObject.start_date !== undefined ||
+      rentalObject.end_date !== undefined
+    ) {
+      await validateDeviceAvailabilityForUpdate(
+        currentRental.id,
+        deviceId,
+        startDate.toISOString(),
+        endDate.toISOString(),
+      );
+    }
+  }
+
+  async function validateDeviceAvailabilityForUpdate(
+    rentalId,
+    deviceId,
+    startDate,
+    endDate,
+  ) {
+    const conflictingRentals = await database.query({
+      text: `
+        SELECT
+          id, start_date, end_date, status
+        FROM
+          rentals
+        WHERE
+          device_id = $1
+        AND
+          id != $2
+        AND
+          deleted_at IS NULL
+        AND
+          status NOT IN ('completed', 'canceled')
+        AND
+          (
+            (start_date <= $3 AND end_date > $3)
+            OR
+            (start_date < $4 AND end_date >= $4)
+            OR
+            (start_date >= $3 AND end_date <= $4)
+          )
+      `,
+      values: [deviceId, rentalId, startDate, endDate],
+    });
+
+    if (conflictingRentals.rows.length > 0) {
+      const conflict = conflictingRentals.rows[0];
+      throw new ValidationError({
+        message:
+          "Este dispositivo já possui um aluguel ativo para o período solicitado.",
+        action: `O dispositivo está alugado de ${new Date(conflict.start_date).toLocaleDateString()} até ${new Date(conflict.end_date).toLocaleDateString()}.`,
+      });
     }
   }
 }

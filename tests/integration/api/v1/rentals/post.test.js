@@ -648,6 +648,106 @@ describe("POST /api/v1/rentals", () => {
         status_code: 403,
       });
     });
+
+    test("fail when device has conflicting rental period", async () => {
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
+      const device = await orchestrator.createDevice();
+      const customerUser =
+        await orchestrator.createAuthenticatedUser("customer");
+
+      const existingRental = await orchestrator.createRental({
+        device_id: device.id,
+        start_date: "2026-01-10T10:00:00Z",
+        end_date: "2026-01-20T10:00:00Z",
+        status: "active",
+      });
+
+      expect(existingRental.id).toBeDefined();
+
+      const response = await fetch("http://localhost:3000/api/v1/rentals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+        body: JSON.stringify({
+          device_id: device.id,
+          customer_id: customerUser.user.id,
+          start_date: "2026-01-15T10:00:00Z",
+          end_date: "2026-01-25T10:00:00Z",
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      const responseBody = await response.json();
+      expect(responseBody).toMatchObject({
+        name: "ValidationError",
+        message:
+          "Este dispositivo já possui um aluguel ativo para o período solicitado.",
+        status_code: 400,
+      });
+      expect(responseBody.action).toContain("O dispositivo está alugado de");
+    });
+
+    test("allow rental when device period does not conflict", async () => {
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
+      const device = await orchestrator.createDevice();
+      const customerUser =
+        await orchestrator.createAuthenticatedUser("customer");
+
+      await orchestrator.createRental({
+        device_id: device.id,
+        start_date: "2026-01-10T10:00:00Z",
+        end_date: "2026-01-20T10:00:00Z",
+        status: "active",
+      });
+
+      const response = await fetch("http://localhost:3000/api/v1/rentals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+        body: JSON.stringify({
+          device_id: device.id,
+          customer_id: customerUser.user.id,
+          start_date: "2026-01-25T10:00:00Z",
+          end_date: "2026-01-30T10:00:00Z",
+        }),
+      });
+
+      expect(response.status).toBe(201);
+    });
+
+    test("allow rental when existing rental is completed", async () => {
+      const { session } = await orchestrator.createAuthenticatedUser("admin");
+      const device = await orchestrator.createDevice();
+      const customerUser =
+        await orchestrator.createAuthenticatedUser("customer");
+
+      await orchestrator.createRental({
+        device_id: device.id,
+        start_date: "2026-01-10T10:00:00Z",
+        end_date: "2026-01-20T10:00:00Z",
+        status: "completed",
+      });
+
+      const response = await fetch("http://localhost:3000/api/v1/rentals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+        body: JSON.stringify({
+          device_id: device.id,
+          customer_id: customerUser.user.id,
+          start_date: "2026-01-15T10:00:00Z",
+          end_date: "2026-01-25T10:00:00Z",
+        }),
+      });
+
+      expect(response.status).toBe(201);
+    });
   });
 
   describe("Support user", () => {
