@@ -1,0 +1,137 @@
+import database from "infra/database";
+import { ValidationError } from "infra/errors";
+import { validate as isValidUuid } from "uuid";
+import device from "models/device";
+import user from "models/user";
+import customerOrder from "models/customer-order";
+
+const RENTAL_STATUSES = [
+  "pending",
+  "active",
+  "completed",
+  "overdue",
+  "canceled",
+];
+
+async function create(rentalObject) {
+  await validationFields(rentalObject);
+  const createdRental = await runInsertQuery(rentalObject);
+  return createdRental;
+
+  async function runInsertQuery(rentalObject) {
+    const rentalCreated = await database.query({
+      text: `
+      INSERT INTO rentals
+        (device_id, customer_id, customer_order_id, start_date, end_date, status, notes, location_refer, lat, lng)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING
+        *
+      ;`,
+      values: [
+        rentalObject.device_id,
+        rentalObject.customer_id,
+        rentalObject.customer_order_id,
+        rentalObject.start_date,
+        rentalObject.end_date,
+        rentalObject.status,
+        rentalObject.notes,
+        rentalObject.location_refer,
+        rentalObject.lat,
+        rentalObject.lng,
+      ],
+    });
+
+    return rentalCreated.rows[0];
+  }
+
+  async function validationFields(rentalObject) {
+    if (!rentalObject.status) {
+      rentalObject.status = "pending";
+    }
+
+    if (!rentalObject.device_id) {
+      throw new ValidationError({
+        message: "O id do dispositivo não foi encontrado ou é inválido.",
+        action: "Verifique o id do dispositivo enviado e tente novamente.",
+      });
+    }
+
+    if (!isValidUuid(rentalObject.device_id)) {
+      throw new ValidationError({
+        message: "O id do dispositivo não foi encontrado ou é inválido.",
+        action: "Verifique o id do dispositivo enviado e tente novamente.",
+      });
+    }
+
+    if (!rentalObject.customer_id) {
+      throw new ValidationError({
+        message: "O id do cliente não foi encontrado ou é inválido.",
+        action: "Verifique o id do cliente enviado e tente novamente.",
+      });
+    }
+
+    if (!isValidUuid(rentalObject.customer_id)) {
+      throw new ValidationError({
+        message: "O id do cliente não foi encontrado ou é inválido.",
+        action: "Verifique o id do cliente enviado e tente novamente.",
+      });
+    }
+
+    if (!rentalObject.start_date) {
+      throw new ValidationError({
+        message: "A data de início não foi informada.",
+        action: "Informe a data de início e tente novamente.",
+      });
+    }
+
+    if (!rentalObject.end_date) {
+      throw new ValidationError({
+        message: "A data de término não foi informada.",
+        action: "Informe a data de término e tente novamente.",
+      });
+    }
+
+    const startDate = new Date(rentalObject.start_date);
+    const endDate = new Date(rentalObject.end_date);
+
+    if (isNaN(startDate.getTime())) {
+      throw new ValidationError({
+        message: "A data de início não é válida.",
+        action: "Informe uma data de início válida e tente novamente.",
+      });
+    }
+
+    if (isNaN(endDate.getTime())) {
+      throw new ValidationError({
+        message: "A data de término não é válida.",
+        action: "Informe uma data de término válida e tente novamente.",
+      });
+    }
+
+    if (endDate <= startDate) {
+      throw new ValidationError({
+        message: "A data de término deve ser posterior à data de início.",
+        action: "Verifique as datas e tente novamente.",
+      });
+    }
+
+    if (!RENTAL_STATUSES.includes(rentalObject.status)) {
+      throw new ValidationError({
+        message: `O status "${rentalObject.status}" não é válido.`,
+        action: `Use um dos status válidos: ${RENTAL_STATUSES.join(", ")}.`,
+      });
+    }
+
+    await device.findOneById(rentalObject.device_id);
+    await user.findOneById(rentalObject.customer_id);
+
+    if (rentalObject.customer_order_id) {
+      await customerOrder.findOneById(rentalObject.customer_order_id);
+    }
+  }
+}
+
+export default Object.freeze({
+  create,
+});
