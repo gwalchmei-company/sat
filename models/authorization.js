@@ -323,6 +323,7 @@ const featuresRoles = {
     "read:rentals:others",
     "update:rentals",
     "update:rentals:others",
+    "delete:rentals",
   ],
   manager: [
     ...DefaultUserFeatures,

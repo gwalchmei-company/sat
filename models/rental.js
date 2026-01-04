@@ -396,10 +396,42 @@ async function update(rentalId, rentalObject) {
   }
 }
 
+async function remove(rentalId) {
+  const rentalToDelete = await validateRental(rentalId);
+  await runDeleteQuery(rentalToDelete.id);
+
+  async function runDeleteQuery(id) {
+    await database.query({
+      text: `
+        UPDATE 
+          rentals
+        SET
+          deleted_at = timezone('utc', now())
+        WHERE id = $1
+        `,
+      values: [id],
+    });
+  }
+
+  async function validateRental(rentalId) {
+    const existingRental = await findOneById(rentalId);
+
+    if (existingRental.deleted_at !== null) {
+      throw new NotFoundError({
+        message: "O aluguel não foi encontrado.",
+        action: "Verifique o id informado e tente novamente.",
+      });
+    }
+
+    return existingRental;
+  }
+}
+
 export default Object.freeze({
   listAll,
   listByCustomerId,
   findOneById,
   create,
   update,
+  remove,
 });
