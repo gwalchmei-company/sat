@@ -17,6 +17,7 @@ const availableFeatures = new Set([
   //DEVICES
   "create:devices",
   "read:devices",
+  "read:rentals:devices",
   "update:devices",
   "update:devices:status",
   "delete:devices",
@@ -38,5 +39,13 @@ const availableFeatures = new Set([
   "update:orders:status",
   "delete:orders",
   "delete:orders:completed",
+
+  // RENTALS
+  "create:rentals",
+  "read:rentals",
+  "read:rentals:self",
+  "read:rentals:others",
+  "update:rentals",
+  "delete:rentals",
 ]);
 export default Object.freeze(availableFeatures);
