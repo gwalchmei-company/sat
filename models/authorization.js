@@ -293,6 +293,7 @@ const featuresRoles = {
     ...DefaultUserFeatures,
     "create:user",
     "read:devices",
+    "read:rentals:devices",
     "update:devices",
     "delete:devices",
 

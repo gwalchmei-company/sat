@@ -76,6 +76,40 @@ async function listByCustomerId(customerId) {
   }
 }
 
+async function listByDeviceId(deviceId) {
+  await device.findOneById(deviceId);
+  const rentalsList = await runSelectQuery(deviceId);
+  return rentalsList;
+
+  async function runSelectQuery(deviceId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          rentals.*,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf,
+          users.phone
+        FROM
+          rentals
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          rentals.device_id = $1
+        AND
+          rentals.deleted_at IS NULL
+        ORDER BY
+          rentals.created_at DESC
+        ;`,
+      values: [deviceId],
+    });
+
+    return results.rows;
+  }
+}
+
 async function findOneById(rentalId) {
   if (!rentalId) {
     throw new ValidationError({
@@ -533,6 +567,7 @@ async function remove(rentalId) {
 export default Object.freeze({
   listAll,
   listByCustomerId,
+  listByDeviceId,
   findOneById,
   create,
   update,

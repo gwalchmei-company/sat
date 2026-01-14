@@ -17,6 +17,7 @@ const availableFeatures = new Set([
   //DEVICES
   "create:devices",
   "read:devices",
+  "read:rentals:devices",
   "update:devices",
   "update:devices:status",
   "delete:devices",
