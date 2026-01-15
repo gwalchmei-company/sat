@@ -1,0 +1,173 @@
+import database from "infra/database";
+import { ValidationError } from "infra/errors";
+import { validate as isValidUuid } from "uuid";
+import rental from "models/rental";
+
+async function create(rentalFinancialObject) {
+  await validationFields(rentalFinancialObject);
+  const createdRentalFinancial = await runInsertQuery(rentalFinancialObject);
+  return createdRentalFinancial;
+
+  async function runInsertQuery(rentalFinancialObject) {
+    const result = await database.query({
+      text: `
+        INSERT INTO rental_financials
+          (rental_id, daily_price_in_cents, total_price_in_cents, deposit_in_cents, discount_in_cents, final_price_in_cents)
+        VALUES
+          ($1, $2, $3, $4, $5, $6)
+        RETURNING
+          *
+        ;`,
+      values: [
+        rentalFinancialObject.rental_id,
+        rentalFinancialObject.daily_price_in_cents,
+        rentalFinancialObject.total_price_in_cents,
+        rentalFinancialObject.deposit_in_cents || 0,
+        rentalFinancialObject.discount_in_cents || 0,
+        rentalFinancialObject.final_price_in_cents,
+      ],
+    });
+
+    return result.rows[0];
+  }
+
+  async function validationFields(rentalFinancialObject) {
+    if (!rentalFinancialObject.rental_id) {
+      throw new ValidationError({
+        message: "O id do aluguel não foi informado.",
+        action: "Informe o id do aluguel e tente novamente.",
+      });
+    }
+
+    if (!isValidUuid(rentalFinancialObject.rental_id)) {
+      throw new ValidationError({
+        message: "O id do aluguel não é válido.",
+        action: "Informe um id válido e tente novamente.",
+      });
+    }
+
+    await rental.findOneById(rentalFinancialObject.rental_id);
+
+    const existingRentalFinancial = await checkExistingRentalFinancial(
+      rentalFinancialObject.rental_id,
+    );
+
+    if (existingRentalFinancial) {
+      throw new ValidationError({
+        message: "Já existe um registro financeiro para este aluguel.",
+        action: "Cada aluguel pode ter apenas um registro financeiro.",
+      });
+    }
+
+    if (
+      !rentalFinancialObject.daily_price_in_cents &&
+      rentalFinancialObject.daily_price_in_cents !== 0
+    ) {
+      throw new ValidationError({
+        message: "O preço diário não foi informado.",
+        action: "Informe o preço diário e tente novamente.",
+      });
+    }
+
+    if (
+      typeof rentalFinancialObject.daily_price_in_cents !== "number" ||
+      rentalFinancialObject.daily_price_in_cents <= 0 ||
+      !Number.isInteger(rentalFinancialObject.daily_price_in_cents)
+    ) {
+      throw new ValidationError({
+        message: "O preço diário deve ser um número inteiro maior que zero.",
+        action: "Informe um preço diário válido e tente novamente.",
+      });
+    }
+
+    if (
+      !rentalFinancialObject.total_price_in_cents &&
+      rentalFinancialObject.total_price_in_cents !== 0
+    ) {
+      throw new ValidationError({
+        message: "O preço total não foi informado.",
+        action: "Informe o preço total e tente novamente.",
+      });
+    }
+
+    if (
+      typeof rentalFinancialObject.total_price_in_cents !== "number" ||
+      rentalFinancialObject.total_price_in_cents <= 0 ||
+      !Number.isInteger(rentalFinancialObject.total_price_in_cents)
+    ) {
+      throw new ValidationError({
+        message: "O preço total deve ser um número inteiro maior que zero.",
+        action: "Informe um preço total válido e tente novamente.",
+      });
+    }
+
+    if (!rentalFinancialObject.final_price_in_cents) {
+      throw new ValidationError({
+        message: "O preço final não foi informado.",
+        action: "Informe o preço final e tente novamente.",
+      });
+    }
+
+    if (
+      typeof rentalFinancialObject.final_price_in_cents !== "number" ||
+      rentalFinancialObject.final_price_in_cents <= 0 ||
+      !Number.isInteger(rentalFinancialObject.final_price_in_cents)
+    ) {
+      throw new ValidationError({
+        message: "O preço final deve ser um número inteiro maior que zero.",
+        action: "Informe um preço final válido e tente novamente.",
+      });
+    }
+
+    if (
+      rentalFinancialObject.deposit_in_cents !== undefined &&
+      rentalFinancialObject.deposit_in_cents !== null
+    ) {
+      if (
+        typeof rentalFinancialObject.deposit_in_cents !== "number" ||
+        rentalFinancialObject.deposit_in_cents < 0 ||
+        !Number.isInteger(rentalFinancialObject.deposit_in_cents)
+      ) {
+        throw new ValidationError({
+          message:
+            "O depósito deve ser um número inteiro maior ou igual a zero.",
+          action: "Informe um depósito válido e tente novamente.",
+        });
+      }
+    }
+
+    if (
+      rentalFinancialObject.discount_in_cents !== undefined &&
+      rentalFinancialObject.discount_in_cents !== null
+    ) {
+      if (
+        typeof rentalFinancialObject.discount_in_cents !== "number" ||
+        rentalFinancialObject.discount_in_cents < 0 ||
+        !Number.isInteger(rentalFinancialObject.discount_in_cents)
+      ) {
+        throw new ValidationError({
+          message:
+            "O desconto deve ser um número inteiro maior ou igual a zero.",
+          action: "Informe um desconto válido e tente novamente.",
+        });
+      }
+    }
+  }
+
+  async function checkExistingRentalFinancial(rentalId) {
+    const result = await database.query({
+      text: `
+        SELECT * FROM rental_financials
+        WHERE rental_id = $1
+        AND deleted_at IS NULL
+        ;`,
+      values: [rentalId],
+    });
+
+    return result.rows[0];
+  }
+}
+
+export default Object.freeze({
+  create,
+});
