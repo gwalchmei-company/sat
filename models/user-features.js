@@ -50,5 +50,8 @@ const availableFeatures = new Set([
 
   // RENTAL FINANCIALS
   "create:rentalfinancials",
+  "read:rentalfinancials",
+  "read:rentalfinancials:self",
+  "read:rentalfinancials:others",
 ]);
 export default Object.freeze(availableFeatures);

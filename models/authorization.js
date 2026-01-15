@@ -288,6 +288,9 @@ const featuresRoles = {
 
     "read:rentals",
     "read:rentals:self",
+
+    "read:rentalfinancials",
+    "read:rentalfinancials:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -327,6 +330,8 @@ const featuresRoles = {
     "delete:rentals",
 
     "create:rentalfinancials",
+    "read:rentalfinancials",
+    "read:rentalfinancials:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -356,6 +361,8 @@ const featuresRoles = {
     "update:rentals:others",
 
     "create:rentalfinancials",
+    "read:rentalfinancials",
+    "read:rentalfinancials:others",
   ],
   operator: [
     ...DefaultUserFeatures,

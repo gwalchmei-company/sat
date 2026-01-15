@@ -3,6 +3,75 @@ import { ValidationError } from "infra/errors";
 import { validate as isValidUuid } from "uuid";
 import rental from "models/rental";
 
+async function listAll() {
+  const rentalFinancialsList = await runSelectQuery();
+  return rentalFinancialsList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          rental_financials.*,
+          rentals.start_date,
+          rentals.end_date,
+          rentals.status AS rental_status,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf
+        FROM
+          rental_financials
+          INNER JOIN rentals ON rentals.id = rental_financials.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          rental_financials.deleted_at IS NULL
+        ORDER BY
+          rental_financials.created_at DESC
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
+async function listByCustomerId(customerId) {
+  const rentalFinancialsList = await runSelectQuery(customerId);
+  return rentalFinancialsList;
+
+  async function runSelectQuery(customerId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          rental_financials.*,
+          rentals.start_date,
+          rentals.end_date,
+          rentals.status AS rental_status,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf
+        FROM
+          rental_financials
+          INNER JOIN rentals ON rentals.id = rental_financials.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          rentals.customer_id = $1
+        AND
+          rental_financials.deleted_at IS NULL
+        ORDER BY
+          rental_financials.created_at DESC
+        ;`,
+      values: [customerId],
+    });
+
+    return results.rows;
+  }
+}
+
 async function create(rentalFinancialObject) {
   await validationFields(rentalFinancialObject);
   const createdRentalFinancial = await runInsertQuery(rentalFinancialObject);
@@ -169,5 +238,7 @@ async function create(rentalFinancialObject) {
 }
 
 export default Object.freeze({
+  listAll,
+  listByCustomerId,
   create,
 });
