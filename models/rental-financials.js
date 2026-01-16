@@ -288,9 +288,137 @@ async function create(rentalFinancialObject) {
   }
 }
 
+async function update(id, rentalFinancialInputValues) {
+  const currentRentalFinancial = await findOneById(id);
+  const rentalFinancialWithNewValues = {
+    ...currentRentalFinancial,
+    ...rentalFinancialInputValues,
+  };
+  validateUpdateFields(rentalFinancialInputValues);
+
+  const updatedRentalFinancial = await runUpdateQuery(
+    rentalFinancialWithNewValues,
+  );
+  return updatedRentalFinancial;
+
+  async function runUpdateQuery(rentalFinancialWithNewValues) {
+    const results = await database.query({
+      text: `
+        UPDATE
+          rental_financials
+        SET
+          daily_price_in_cents = $2,
+          total_price_in_cents = $3,
+          deposit_in_cents = $4,
+          discount_in_cents = $5,
+          final_price_in_cents = $6,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+        RETURNING
+          *
+      `,
+      values: [
+        rentalFinancialWithNewValues.id,
+        rentalFinancialWithNewValues.daily_price_in_cents,
+        rentalFinancialWithNewValues.total_price_in_cents,
+        rentalFinancialWithNewValues.deposit_in_cents,
+        rentalFinancialWithNewValues.discount_in_cents,
+        rentalFinancialWithNewValues.final_price_in_cents,
+      ],
+    });
+    return results.rows[0];
+  }
+
+  function validateUpdateFields(input) {
+    if (
+      input.daily_price_in_cents !== undefined &&
+      input.daily_price_in_cents !== null
+    ) {
+      if (
+        typeof input.daily_price_in_cents !== "number" ||
+        input.daily_price_in_cents <= 0 ||
+        !Number.isInteger(input.daily_price_in_cents)
+      ) {
+        throw new ValidationError({
+          message: "O preço diário deve ser um número inteiro maior que zero.",
+          action: "Informe um preço diário válido e tente novamente.",
+        });
+      }
+    }
+
+    if (
+      input.total_price_in_cents !== undefined &&
+      input.total_price_in_cents !== null
+    ) {
+      if (
+        typeof input.total_price_in_cents !== "number" ||
+        input.total_price_in_cents <= 0 ||
+        !Number.isInteger(input.total_price_in_cents)
+      ) {
+        throw new ValidationError({
+          message: "O preço total deve ser um número inteiro maior que zero.",
+          action: "Informe um preço total válido e tente novamente.",
+        });
+      }
+    }
+
+    if (
+      input.final_price_in_cents !== undefined &&
+      input.final_price_in_cents !== null
+    ) {
+      if (
+        typeof input.final_price_in_cents !== "number" ||
+        input.final_price_in_cents <= 0 ||
+        !Number.isInteger(input.final_price_in_cents)
+      ) {
+        throw new ValidationError({
+          message: "O preço final deve ser um número inteiro maior que zero.",
+          action: "Informe um preço final válido e tente novamente.",
+        });
+      }
+    }
+
+    if (
+      input.deposit_in_cents !== undefined &&
+      input.deposit_in_cents !== null
+    ) {
+      if (
+        typeof input.deposit_in_cents !== "number" ||
+        input.deposit_in_cents < 0 ||
+        !Number.isInteger(input.deposit_in_cents)
+      ) {
+        throw new ValidationError({
+          message:
+            "O depósito deve ser um número inteiro maior ou igual a zero.",
+          action: "Informe um depósito válido e tente novamente.",
+        });
+      }
+    }
+
+    if (
+      input.discount_in_cents !== undefined &&
+      input.discount_in_cents !== null
+    ) {
+      if (
+        typeof input.discount_in_cents !== "number" ||
+        input.discount_in_cents < 0 ||
+        !Number.isInteger(input.discount_in_cents)
+      ) {
+        throw new ValidationError({
+          message:
+            "O desconto deve ser um número inteiro maior ou igual a zero.",
+          action: "Informe um desconto válido e tente novamente.",
+        });
+      }
+    }
+  }
+}
+
 export default Object.freeze({
   listAll,
   listByCustomerId,
   findOneById,
   create,
+  update,
 });

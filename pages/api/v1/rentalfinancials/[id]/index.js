@@ -8,6 +8,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:rentalfinancials"), getHandler);
+router.patch(controller.canRequest("update:rentalfinancials"), patchHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -45,4 +46,22 @@ async function getHandler(request, response) {
   }
 
   return response.status(200).json(rentalFinancial);
+}
+
+async function patchHandler(request, response) {
+  const rentalFinancialId = request.query.id;
+  const insecureInput = request.body;
+
+  const secureInputValues = authorization.filterInput(
+    request.context.user,
+    "update:rentalfinancials",
+    insecureInput,
+  );
+
+  const updatedRentalFinancial = await rentalFinancials.update(
+    rentalFinancialId,
+    secureInputValues,
+  );
+
+  return response.status(200).json(updatedRentalFinancial);
 }
