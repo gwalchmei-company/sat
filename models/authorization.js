@@ -358,6 +358,7 @@ const featuresRoles = {
     "read:rentalfinancials",
     "read:rentalfinancials:others",
     "update:rentalfinancials",
+    "delete:rentalfinancials",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -390,6 +391,7 @@ const featuresRoles = {
     "read:rentalfinancials",
     "read:rentalfinancials:others",
     "update:rentalfinancials",
+    "delete:rentalfinancials",
   ],
   operator: [
     ...DefaultUserFeatures,

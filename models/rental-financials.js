@@ -415,10 +415,32 @@ async function update(id, rentalFinancialInputValues) {
   }
 }
 
+async function Delete(id) {
+  const rentalFinancialToDelete = await findOneById(id);
+
+  await runDeleteQuery(rentalFinancialToDelete.id);
+  return;
+
+  async function runDeleteQuery(id) {
+    await database.query({
+      text: `
+        UPDATE
+          rental_financials
+        SET
+          deleted_at = timezone('utc', now())
+        WHERE
+          id = $1
+        ;`,
+      values: [id],
+    });
+  }
+}
+
 export default Object.freeze({
   listAll,
   listByCustomerId,
   findOneById,
   create,
   update,
+  Delete,
 });

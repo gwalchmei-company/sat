@@ -54,5 +54,6 @@ const availableFeatures = new Set([
   "read:rentalfinancials:self",
   "read:rentalfinancials:others",
   "update:rentalfinancials",
+  "delete:rentalfinancials",
 ]);
 export default Object.freeze(availableFeatures);

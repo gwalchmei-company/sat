@@ -9,6 +9,7 @@ const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:rentalfinancials"), getHandler);
 router.patch(controller.canRequest("update:rentalfinancials"), patchHandler);
+router.delete(controller.canRequest("delete:rentalfinancials"), deleteHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -64,4 +65,12 @@ async function patchHandler(request, response) {
   );
 
   return response.status(200).json(updatedRentalFinancial);
+}
+
+async function deleteHandler(request, response) {
+  const rentalFinancialId = request.query.id;
+
+  await rentalFinancials.Delete(rentalFinancialId);
+
+  return response.status(200).json({});
 }
