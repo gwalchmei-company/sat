@@ -12,6 +12,7 @@ import financial_expense, {
 import authorization from "models/authorization";
 import customerOrder from "models/customer-order";
 import rental from "models/rental";
+import rentalFinancials from "models/rental-financials";
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
 
@@ -209,6 +210,30 @@ async function createRental(rentalObject) {
   return createdRental;
 }
 
+async function createRentalFinancial(rentalFinancialObject, rentalObject) {
+  let createdRental;
+  if (!rentalFinancialObject?.rental_id) {
+    createdRental = await orchestrator.createRental(rentalObject);
+  }
+
+  const createdRentalFinancial = await rentalFinancials.create({
+    rental_id: rentalFinancialObject?.rental_id || createdRental.id,
+    daily_price_in_cents:
+      rentalFinancialObject?.daily_price_in_cents ||
+      faker.number.int({ min: 5000, max: 20000 }),
+    total_price_in_cents:
+      rentalFinancialObject?.total_price_in_cents ||
+      faker.number.int({ min: 30000, max: 100000 }),
+    deposit_in_cents: rentalFinancialObject?.deposit_in_cents || 0,
+    discount_in_cents: rentalFinancialObject?.discount_in_cents || 0,
+    final_price_in_cents:
+      rentalFinancialObject?.final_price_in_cents ||
+      faker.number.int({ min: 30000, max: 100000 }),
+  });
+
+  return createdRentalFinancial;
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -229,6 +254,7 @@ const orchestrator = {
   createAuthenticatedUser,
   createCustomerOrder,
   createRental,
+  createRentalFinancial,
 };
 
 export default orchestrator;

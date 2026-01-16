@@ -215,6 +215,26 @@ function filterInput(user, feature, input, target) {
     };
   }
 
+  if (feature === "update:rentalfinancials" && can(user, feature, target)) {
+    const denytedFields = ["rental_id", "id", "created_at", "deleted_at"];
+    for (const field of denytedFields) {
+      if (input[field] !== undefined) {
+        throw new ValidationError({
+          message: `O campo "${field}" não pode ser atualizado.`,
+          action: `Remova o campo "${field}" e tente novamente.`,
+        });
+      }
+    }
+
+    filteredInputValues = {
+      daily_price_in_cents: input?.daily_price_in_cents,
+      total_price_in_cents: input?.total_price_in_cents,
+      deposit_in_cents: input?.deposit_in_cents,
+      discount_in_cents: input?.discount_in_cents,
+      final_price_in_cents: input?.final_price_in_cents,
+    };
+  }
+
   // Remove undefined values
   const cleanedInput = {};
   for (const key in filteredInputValues) {
@@ -227,7 +247,12 @@ function filterInput(user, feature, input, target) {
 }
 
 function validateInput(input) {
-  if (!input) {
+  let countInputFields = 0;
+  for (const key in input) {
+    if (input[key] !== undefined) countInputFields++;
+  }
+
+  if (!input || countInputFields === 0) {
     throw new ValidationError({
       message: `Nenhum "input" foi especificado para a ação de filtro.`,
       action: `Contate o suporte informando o campo "errorId".`,
@@ -288,6 +313,9 @@ const featuresRoles = {
 
     "read:rentals",
     "read:rentals:self",
+
+    "read:rentalfinancials",
+    "read:rentalfinancials:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -325,6 +353,12 @@ const featuresRoles = {
     "update:rentals",
     "update:rentals:others",
     "delete:rentals",
+
+    "create:rentalfinancials",
+    "read:rentalfinancials",
+    "read:rentalfinancials:others",
+    "update:rentalfinancials",
+    "delete:rentalfinancials",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -352,6 +386,12 @@ const featuresRoles = {
     "read:rentals:others",
     "update:rentals",
     "update:rentals:others",
+
+    "create:rentalfinancials",
+    "read:rentalfinancials",
+    "read:rentalfinancials:others",
+    "update:rentalfinancials",
+    "delete:rentalfinancials",
   ],
   operator: [
     ...DefaultUserFeatures,

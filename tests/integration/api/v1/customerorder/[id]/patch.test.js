@@ -571,8 +571,8 @@ describe("PATCH /api/v1/customerorder/:id", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "ValidationError",
-        message: "O corpo da requisição está vazio ou inválido.",
-        action: "Verifique os dados enviados e tente novamente.",
+        action: 'Contate o suporte informando o campo "errorId".',
+        message: 'Nenhum "input" foi especificado para a ação de filtro.',
         status_code: 400,
       });
     });
