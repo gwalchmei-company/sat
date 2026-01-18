@@ -1,5 +1,5 @@
 import customerOrder from "models/customer-order";
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator";
 import { v4 as generateUUID } from "uuid";
 
 beforeAll(async () => {
