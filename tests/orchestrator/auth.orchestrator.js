@@ -24,11 +24,11 @@ async function createSession(userId) {
   return await session.create(userId);
 }
 
-async function activateUser(inactiveUser) {
-  return await user.setFeatures(inactiveUser.id, [
-    "create:session",
-    "read:session",
-  ]);
+async function activateUser(inactiveUser, role = "customer") {
+  return await user.setFeatures(
+    inactiveUser.id,
+    authorization.featuresRoles[role],
+  );
 }
 
 async function createAuthenticatedUser(role = "customer", userObject) {
