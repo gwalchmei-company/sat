@@ -234,6 +234,10 @@ async function createRentalFinancial(rentalFinancialObject, rentalObject) {
   return createdRentalFinancial;
 }
 
+async function addFeaturesToUser(userId, features) {
+  return await user.addFeatures(userId, features);
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -255,6 +259,7 @@ const orchestrator = {
   createCustomerOrder,
   createRental,
   createRentalFinancial,
+  addFeaturesToUser,
 };
 
 export default orchestrator;
