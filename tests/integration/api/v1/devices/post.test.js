@@ -44,7 +44,7 @@ describe("POST /api/v1/devices", () => {
     test("With unique and valid data", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -85,7 +85,7 @@ describe("POST /api/v1/devices", () => {
     test("With duplicated UTID", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -147,7 +147,7 @@ describe("POST /api/v1/devices", () => {
     test("With duplicated Serial Number", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -209,7 +209,7 @@ describe("POST /api/v1/devices", () => {
     test("Without required field 'email_acc'", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -249,7 +249,7 @@ describe("POST /api/v1/devices", () => {
     test("Without required field 'UTID_device'", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -288,7 +288,7 @@ describe("POST /api/v1/devices", () => {
     test("Without required field 'serial_number'", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -327,7 +327,7 @@ describe("POST /api/v1/devices", () => {
     test("Without required field 'serial_number_router'", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -366,7 +366,7 @@ describe("POST /api/v1/devices", () => {
     test("Without required field 'model'", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,
@@ -405,7 +405,7 @@ describe("POST /api/v1/devices", () => {
     test("With invalid status value", async () => {
       const userCreated = await orchestrator.createUser();
       const userActivated = await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
 
       await user.setFeatures(userCreated.id, [
         ...userActivated.features,

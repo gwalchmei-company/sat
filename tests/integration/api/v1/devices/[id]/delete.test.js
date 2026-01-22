@@ -30,7 +30,7 @@ describe("DELETE /api/v1/devices/:id", () => {
     test("should deny delete when user is customer", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.customer,
@@ -57,7 +57,7 @@ describe("DELETE /api/v1/devices/:id", () => {
     test("should delete device when user is admin", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const createdDevice = await orchestrator.createDevice();
@@ -82,7 +82,7 @@ describe("DELETE /api/v1/devices/:id", () => {
     test("should return 400 when admin provides invalid uuid", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const response = await fetch(
@@ -109,7 +109,7 @@ describe("DELETE /api/v1/devices/:id", () => {
     test("should return 404 when admin tries to delete non-existent device", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
       const fakeId = faker.string.uuid();
 
@@ -139,7 +139,7 @@ describe("DELETE /api/v1/devices/:id", () => {
     test("should deny delete when user is manager", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.manager,
@@ -166,7 +166,7 @@ describe("DELETE /api/v1/devices/:id", () => {
     test("should deny delete when user is operator", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.operator,
@@ -193,7 +193,7 @@ describe("DELETE /api/v1/devices/:id", () => {
     test("should deny delete when user is support", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.support,

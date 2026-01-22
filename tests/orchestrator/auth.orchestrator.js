@@ -20,8 +20,8 @@ async function createUser(userObject) {
   });
 }
 
-async function createSession(userId) {
-  return await session.create(userId);
+async function createSession(userObject) {
+  return await session.create(userObject.id);
 }
 
 async function activateUser(inactiveUser, role = "customer") {
@@ -34,7 +34,7 @@ async function activateUser(inactiveUser, role = "customer") {
 async function createAuthenticatedUser(role = "customer", userObject) {
   const createdUser = await createUser(userObject);
   const activatedUser = await activateUser(createdUser);
-  const sessionObject = await createSession(activatedUser.id);
+  const sessionObject = await createSession(activatedUser);
   const userWithFeatures = await user.setFeatures(
     activatedUser.id,
     authorization.featuresRoles[`${role}`],
