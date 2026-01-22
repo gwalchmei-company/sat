@@ -316,6 +316,9 @@ const featuresRoles = {
 
     "read:rentalfinancials",
     "read:rentalfinancials:self",
+
+    "read:rentalfiles",
+    "read:rentalfiles:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -361,6 +364,8 @@ const featuresRoles = {
     "delete:rentalfinancials",
 
     "create:rentalfiles",
+    "read:rentalfiles",
+    "read:rentalfiles:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -396,6 +401,8 @@ const featuresRoles = {
     "delete:rentalfinancials",
 
     "create:rentalfiles",
+    "read:rentalfiles",
+    "read:rentalfiles:others",
   ],
   operator: [
     ...DefaultUserFeatures,
@@ -411,6 +418,8 @@ const featuresRoles = {
     "read:rentals:others",
 
     "create:rentalfiles",
+    "read:rentalfiles",
+    "read:rentalfiles:others",
   ],
   support: [
     ...DefaultUserFeatures,
@@ -424,6 +433,8 @@ const featuresRoles = {
     "read:rentals:others",
 
     "create:rentalfiles",
+    "read:rentalfiles",
+    "read:rentalfiles:others",
   ],
 };
 

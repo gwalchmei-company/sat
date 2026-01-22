@@ -136,7 +136,53 @@ async function create(fileObject) {
   }
 }
 
+async function findAllByRentalId(rentalId) {
+  if (!rentalId) {
+    throw new ValidationError({
+      message: "O id do aluguel não foi informado.",
+      action: "Informe o id do aluguel e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(rentalId)) {
+    throw new ValidationError({
+      message: "O id do aluguel não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  await rental.findOneById(rentalId);
+
+  const filesList = await runSelectQuery(rentalId);
+  return filesList;
+
+  async function runSelectQuery(rentalId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          rental_files.*,
+          users.username AS uploaded_by_username,
+          deleted_users.username AS deleted_by_username
+        FROM
+          rental_files
+          INNER JOIN users ON users.id = rental_files.uploaded_by
+          LEFT JOIN users AS deleted_users ON deleted_users.id = rental_files.deleted_by
+        WHERE
+          rental_files.rental_id = $1
+        AND
+          rental_files.deleted_at IS NULL
+        ORDER BY
+          rental_files.created_at DESC
+        ;`,
+      values: [rentalId],
+    });
+
+    return results.rows;
+  }
+}
+
 export default Object.freeze({
   create,
+  findAllByRentalId,
   FILE_TYPES,
 });
