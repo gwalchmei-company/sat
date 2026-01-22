@@ -1,0 +1,142 @@
+import database from "infra/database";
+import { ValidationError } from "infra/errors";
+import { validate as isValidUuid } from "uuid";
+import rental from "models/rental";
+
+const FILE_TYPES = [
+  "DELIVERY_PHOTO",
+  "RETURN_PHOTO",
+  "CONTRACT",
+  "OTHER",
+  "DAMAGE_REPORT",
+  "PAYMENT_RECEIPT",
+];
+
+async function create(fileObject) {
+  await validateFileObject(fileObject);
+
+  const rentalFileCreated = await runInsertQuery(fileObject);
+  return rentalFileCreated;
+
+  async function validateFileObject(fileObject) {
+    if (!fileObject) {
+      throw new ValidationError({
+        message: "Os dados do arquivo não foram informados.",
+        action: "Informe os dados do arquivo e tente novamente.",
+      });
+    }
+
+    if (!fileObject.rental_id) {
+      throw new ValidationError({
+        message: "O id do aluguel não foi informado.",
+        action: "Informe o id do aluguel e tente novamente.",
+      });
+    }
+
+    if (!isValidUuid(fileObject.rental_id)) {
+      throw new ValidationError({
+        message: "O id do aluguel não é válido.",
+        action: "Informe um id válido e tente novamente.",
+      });
+    }
+
+    await rental.findOneById(fileObject.rental_id);
+
+    if (!fileObject.type) {
+      throw new ValidationError({
+        message: "O tipo do arquivo não foi informado.",
+        action: "Informe o tipo do arquivo e tente novamente.",
+      });
+    }
+
+    if (!FILE_TYPES.includes(fileObject.type)) {
+      throw new ValidationError({
+        message: `O tipo "${fileObject.type}" não é válido.`,
+        action: `Informe um dos tipos válidos: ${FILE_TYPES.join(", ")}.`,
+      });
+    }
+
+    if (!fileObject.file_url) {
+      throw new ValidationError({
+        message: "A URL do arquivo não foi informada.",
+        action: "Informe a URL do arquivo e tente novamente.",
+      });
+    }
+
+    if (typeof fileObject.file_url !== "string") {
+      throw new ValidationError({
+        message: "A URL do arquivo deve ser uma string.",
+        action: "Informe uma URL válida e tente novamente.",
+      });
+    }
+
+    if (!fileObject.uploaded_by) {
+      throw new ValidationError({
+        message: "O id do usuário que fez o upload não foi informado.",
+        action: "Informe o id do usuário que fez o upload e tente novamente.",
+      });
+    }
+
+    if (!isValidUuid(fileObject.uploaded_by)) {
+      throw new ValidationError({
+        message: "O id do usuário que fez o upload não é válido.",
+        action: "Informe um id válido e tente novamente.",
+      });
+    }
+
+    if (fileObject.file_size && typeof fileObject.file_size !== "number") {
+      throw new ValidationError({
+        message: "O tamanho do arquivo deve ser um número.",
+        action: "Informe um tamanho válido e tente novamente.",
+      });
+    }
+
+    if (
+      fileObject.file_size &&
+      (fileObject.file_size < 0 || fileObject.file_size > 52428800)
+    ) {
+      throw new ValidationError({
+        message: "O tamanho do arquivo deve estar entre 0 e 50MB.",
+        action: "Informe um tamanho válido e tente novamente.",
+      });
+    }
+  }
+
+  async function runInsertQuery(fileObject) {
+    const query = {
+      text: `
+        INSERT INTO rental_files (
+          rental_id,
+          type,
+          file_url,
+          file_name,
+          file_size,
+          mime_type,
+          description,
+          uploaded_by
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8
+        )
+        RETURNING *
+        ;`,
+      values: [
+        fileObject.rental_id,
+        fileObject.type,
+        fileObject.file_url,
+        fileObject.file_name || null,
+        fileObject.file_size || null,
+        fileObject.mime_type || null,
+        fileObject.description || null,
+        fileObject.uploaded_by,
+      ],
+    };
+
+    const results = await database.query(query);
+    return results.rows[0];
+  }
+}
+
+export default Object.freeze({
+  create,
+  FILE_TYPES,
+});
