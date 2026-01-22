@@ -367,6 +367,8 @@ const featuresRoles = {
     "read:rentalfiles",
     "read:rentalfiles:others",
     "delete:rentalfiles",
+
+    "create:contracts",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -405,6 +407,8 @@ const featuresRoles = {
     "read:rentalfiles",
     "read:rentalfiles:others",
     "delete:rentalfiles",
+
+    "create:contracts",
   ],
   operator: [
     ...DefaultUserFeatures,

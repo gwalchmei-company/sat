@@ -62,5 +62,8 @@ const availableFeatures = new Set([
   "read:rentalfiles:self",
   "read:rentalfiles:others",
   "delete:rentalfiles",
+
+  // CONTRACTS
+  "create:contracts",
 ]);
 export default Object.freeze(availableFeatures);

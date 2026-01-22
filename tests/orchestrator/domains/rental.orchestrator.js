@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker/";
 import rental from "models/rental";
 import rentalFiles from "models/rental-file.js";
+import contract from "models/contract.js";
 import deviceOrchestrator from "./device.orchestrator.js";
 import authOrchestrator from "../auth.orchestrator.js";
 
@@ -52,8 +53,33 @@ async function createRentalFile(fileObject) {
   return createdFile;
 }
 
+async function createContract(contractObject) {
+  const createdRental = contractObject?.rental_id ? null : await createRental();
+
+  const contractNumber =
+    contractObject?.contract_number ||
+    `CT-${faker.number.int({ min: 100000, max: 999999 })}`;
+
+  const createdContract = await contract.create({
+    rental_id: contractObject?.rental_id || createdRental.id,
+    contract_number: contractNumber,
+    status: contractObject?.status || "draft",
+    version: contractObject?.version || 1,
+    pdf_url: contractObject?.pdf_url || null,
+    file_hash: contractObject?.file_hash || null,
+    expires_at: contractObject?.expires_at || null,
+    previous_contract_id: contractObject?.previous_contract_id || null,
+    signed_at: contractObject?.signed_at || null,
+    signed_by: contractObject?.signed_by || null,
+    deleted_by: contractObject?.deleted_by || null,
+  });
+
+  return createdContract;
+}
+
 const orchestrator = {
   createRental,
   createRentalFile,
+  createContract,
 };
 export default orchestrator;
