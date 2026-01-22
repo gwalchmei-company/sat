@@ -1,4 +1,4 @@
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import authorization from "models/authorization";
 import user from "models/user";
 
@@ -34,7 +34,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
       // Create customer with rentals
       const customer = await orchestrator.createUser();
       await orchestrator.activateUser(customer);
-      const customerSession = await orchestrator.createSession(customer.id);
+      const customerSession = await orchestrator.createSession(customer);
       await user.setFeatures(customer.id, authorization.featuresRoles.customer);
 
       // Create a device and rental for this customer
@@ -89,7 +89,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
       // Create two customers
       const customer1 = await orchestrator.createUser();
       await orchestrator.activateUser(customer1);
-      const customer1Session = await orchestrator.createSession(customer1.id);
+      const customer1Session = await orchestrator.createSession(customer1);
       await user.setFeatures(
         customer1.id,
         authorization.featuresRoles.customer,
@@ -120,7 +120,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
     test("With non-existent username", async () => {
       const customer = await orchestrator.createUser();
       await orchestrator.activateUser(customer);
-      const customerSession = await orchestrator.createSession(customer.id);
+      const customerSession = await orchestrator.createSession(customer);
       await user.setFeatures(customer.id, authorization.featuresRoles.customer);
 
       const response = await fetch(
@@ -147,7 +147,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
     test("Retrieving rentals of any customer", async () => {
       const admin = await orchestrator.createUser();
       await orchestrator.activateUser(admin);
-      const adminSession = await orchestrator.createSession(admin.id);
+      const adminSession = await orchestrator.createSession(admin);
       await user.setFeatures(admin.id, authorization.featuresRoles.admin);
 
       // Create a customer with rental
@@ -204,7 +204,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
     test("Retrieving rentals of customer with no rentals", async () => {
       const admin = await orchestrator.createUser();
       await orchestrator.activateUser(admin);
-      const adminSession = await orchestrator.createSession(admin.id);
+      const adminSession = await orchestrator.createSession(admin);
       await user.setFeatures(admin.id, authorization.featuresRoles.admin);
 
       // Create a customer without rentals
@@ -230,7 +230,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
     test("Retrieving rentals of any customer", async () => {
       const manager = await orchestrator.createUser();
       await orchestrator.activateUser(manager);
-      const managerSession = await orchestrator.createSession(manager.id);
+      const managerSession = await orchestrator.createSession(manager);
       await user.setFeatures(manager.id, authorization.featuresRoles.manager);
 
       // Create a customer with rental
@@ -268,7 +268,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
     test("Retrieving rentals of any customer", async () => {
       const operator = await orchestrator.createUser();
       await orchestrator.activateUser(operator);
-      const operatorSession = await orchestrator.createSession(operator.id);
+      const operatorSession = await orchestrator.createSession(operator);
       await user.setFeatures(operator.id, authorization.featuresRoles.operator);
 
       // Create a customer with rental
@@ -305,7 +305,7 @@ describe("GET /api/v1/users/[username]/rentals", () => {
     test("Retrieving rentals of any customer", async () => {
       const support = await orchestrator.createUser();
       await orchestrator.activateUser(support);
-      const supportSession = await orchestrator.createSession(support.id);
+      const supportSession = await orchestrator.createSession(support);
       await user.setFeatures(support.id, authorization.featuresRoles.support);
 
       // Create a customer with rental

@@ -1,4 +1,4 @@
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import financial_expense from "models/financial-expenses";
 import { v4 as generateUuid } from "uuid";
 

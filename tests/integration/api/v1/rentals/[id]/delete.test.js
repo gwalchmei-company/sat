@@ -1,4 +1,4 @@
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import rental from "models/rental.js";
 
 beforeAll(async () => {

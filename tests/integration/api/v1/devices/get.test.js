@@ -1,4 +1,4 @@
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import user from "models/user.js";
 import authorization from "models/authorization";
 import session from "models/session";
@@ -29,7 +29,7 @@ describe("GET /api/v1/devices", () => {
     test("With valid session", async () => {
       const userCreated = await orchestrator.createUser();
       await orchestrator.activateUser(userCreated);
-      const sessionObject = await orchestrator.createSession(userCreated.id);
+      const sessionObject = await orchestrator.createSession(userCreated);
       await user.setFeatures(
         userCreated.id,
         authorization.featuresRoles.customer,
@@ -56,7 +56,7 @@ describe("GET /api/v1/devices", () => {
     test("With valid session", async () => {
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       const deviceCreated = await orchestrator.createDevice();
 
@@ -96,7 +96,7 @@ describe("GET /api/v1/devices", () => {
 
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       await user.setFeatures(
         adminUserActivated.id,
@@ -126,7 +126,7 @@ describe("GET /api/v1/devices", () => {
     test("With valid session", async () => {
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       const deviceCreated = await orchestrator.createDevice();
 
@@ -166,7 +166,7 @@ describe("GET /api/v1/devices", () => {
 
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       await user.setFeatures(
         adminUserActivated.id,
@@ -196,7 +196,7 @@ describe("GET /api/v1/devices", () => {
     test("With valid session", async () => {
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       const deviceCreated = await orchestrator.createDevice();
 
@@ -236,7 +236,7 @@ describe("GET /api/v1/devices", () => {
 
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       await user.setFeatures(
         adminUserActivated.id,
@@ -266,7 +266,7 @@ describe("GET /api/v1/devices", () => {
     test("With valid session", async () => {
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       const deviceCreated = await orchestrator.createDevice();
 
@@ -306,7 +306,7 @@ describe("GET /api/v1/devices", () => {
 
       const adminUser = await orchestrator.createUser();
       const adminUserActivated = await orchestrator.activateUser(adminUser);
-      const sessionObject = await orchestrator.createSession(adminUser.id);
+      const sessionObject = await orchestrator.createSession(adminUser);
 
       await user.setFeatures(
         adminUserActivated.id,

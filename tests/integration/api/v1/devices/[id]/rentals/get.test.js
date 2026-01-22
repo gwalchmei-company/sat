@@ -1,4 +1,4 @@
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import authorization from "models/authorization";
 import user from "models/user";
 
@@ -32,7 +32,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("With valid session", async () => {
       const customer = await orchestrator.createUser();
       await orchestrator.activateUser(customer);
-      const customerSession = await orchestrator.createSession(customer.id);
+      const customerSession = await orchestrator.createSession(customer);
       await user.setFeatures(customer.id, authorization.featuresRoles.customer);
 
       const device = await orchestrator.createDevice();
@@ -62,7 +62,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("Retrieving rentals of a device with rentals", async () => {
       const admin = await orchestrator.createUser();
       await orchestrator.activateUser(admin);
-      const adminSession = await orchestrator.createSession(admin.id);
+      const adminSession = await orchestrator.createSession(admin);
       await user.setFeatures(admin.id, authorization.featuresRoles.admin);
 
       // Create device and rental
@@ -118,7 +118,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("Retrieving rentals of a device with no rentals", async () => {
       const admin = await orchestrator.createUser();
       await orchestrator.activateUser(admin);
-      const adminSession = await orchestrator.createSession(admin.id);
+      const adminSession = await orchestrator.createSession(admin);
       await user.setFeatures(admin.id, authorization.featuresRoles.admin);
 
       const device = await orchestrator.createDevice();
@@ -140,7 +140,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("With invalid device id", async () => {
       const admin = await orchestrator.createUser();
       await orchestrator.activateUser(admin);
-      const adminSession = await orchestrator.createSession(admin.id);
+      const adminSession = await orchestrator.createSession(admin);
       await user.setFeatures(admin.id, authorization.featuresRoles.admin);
 
       const response = await fetch(
@@ -165,7 +165,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("With non-existent device id", async () => {
       const admin = await orchestrator.createUser();
       await orchestrator.activateUser(admin);
-      const adminSession = await orchestrator.createSession(admin.id);
+      const adminSession = await orchestrator.createSession(admin);
       await user.setFeatures(admin.id, authorization.featuresRoles.admin);
 
       const response = await fetch(
@@ -190,7 +190,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("Retrieving rentals of device with multiple rentals", async () => {
       const admin = await orchestrator.createUser();
       await orchestrator.activateUser(admin);
-      const adminSession = await orchestrator.createSession(admin.id);
+      const adminSession = await orchestrator.createSession(admin);
       await user.setFeatures(admin.id, authorization.featuresRoles.admin);
 
       // Create device and multiple rentals
@@ -244,7 +244,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("Retrieving rentals of a device", async () => {
       const manager = await orchestrator.createUser();
       await orchestrator.activateUser(manager);
-      const managerSession = await orchestrator.createSession(manager.id);
+      const managerSession = await orchestrator.createSession(manager);
       await user.setFeatures(manager.id, authorization.featuresRoles.manager);
 
       const device = await orchestrator.createDevice();
@@ -279,7 +279,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("Retrieving rentals of a device", async () => {
       const operator = await orchestrator.createUser();
       await orchestrator.activateUser(operator);
-      const operatorSession = await orchestrator.createSession(operator.id);
+      const operatorSession = await orchestrator.createSession(operator);
       await user.setFeatures(operator.id, authorization.featuresRoles.operator);
 
       const device = await orchestrator.createDevice();
@@ -314,7 +314,7 @@ describe("GET /api/v1/devices/[id]/rentals", () => {
     test("Retrieving rentals of a device", async () => {
       const support = await orchestrator.createUser();
       await orchestrator.activateUser(support);
-      const supportSession = await orchestrator.createSession(support.id);
+      const supportSession = await orchestrator.createSession(support);
       await user.setFeatures(support.id, authorization.featuresRoles.support);
 
       const device = await orchestrator.createDevice();

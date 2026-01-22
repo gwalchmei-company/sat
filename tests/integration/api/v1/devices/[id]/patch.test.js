@@ -1,4 +1,4 @@
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import user from "models/user.js";
 import authorization from "models/authorization";
 import { faker } from "@faker-js/faker/.";
@@ -55,7 +55,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With all device data valid", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.customer,
@@ -105,7 +105,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With all device data valid", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const deviceCreated = await orchestrator.createDevice();
@@ -156,7 +156,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With invalid UUID", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const response = await fetch(
@@ -185,7 +185,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With valid UUID but non-existent device", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
       const fakeId = faker.string.uuid();
 
@@ -215,7 +215,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With empty body should not update anything", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const session = await orchestrator.createSession(createdUser.id);
+      const session = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const device = await orchestrator.createDevice();
@@ -245,7 +245,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With forbidden field", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const session = await orchestrator.createSession(createdUser.id);
+      const session = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const device = await orchestrator.createDevice();
@@ -278,7 +278,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("Should not allow created_at update", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const session = await orchestrator.createSession(createdUser.id);
+      const session = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const device = await orchestrator.createDevice();
@@ -311,7 +311,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("Should not allow updated_at update", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const session = await orchestrator.createSession(createdUser.id);
+      const session = await orchestrator.createSession(createdUser);
       await user.setFeatures(createdUser.id, authorization.featuresRoles.admin);
 
       const device = await orchestrator.createDevice();
@@ -347,7 +347,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With all device data valid", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.manager,
@@ -403,7 +403,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With fields unauthorizated", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.operator,
@@ -453,7 +453,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With status only", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.operator,
@@ -499,7 +499,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("Operator cannot update restricted fields silently", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const session = await orchestrator.createSession(createdUser.id);
+      const session = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.operator,
@@ -541,7 +541,7 @@ describe("PATCH /api/v1/devices/:id", () => {
     test("With all device data valid", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
       await user.setFeatures(
         createdUser.id,
         authorization.featuresRoles.support,

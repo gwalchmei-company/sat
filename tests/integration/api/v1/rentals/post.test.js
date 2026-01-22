@@ -1,4 +1,4 @@
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import { faker } from "@faker-js/faker";
 
 beforeAll(async () => {

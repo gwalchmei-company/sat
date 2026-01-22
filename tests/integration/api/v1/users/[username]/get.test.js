@@ -1,5 +1,5 @@
 import { version as uuidVersion } from "uuid";
-import orchestrator from "tests/orchestrator.js";
+import orchestrator from "tests/orchestrator/index.js";
 import authorization from "models/authorization";
 
 beforeAll(async () => {
