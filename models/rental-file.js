@@ -1,5 +1,5 @@
 import database from "infra/database";
-import { ValidationError } from "infra/errors";
+import { ValidationError, NotFoundError } from "infra/errors";
 import { validate as isValidUuid } from "uuid";
 import rental from "models/rental";
 
@@ -181,8 +181,79 @@ async function findAllByRentalId(rentalId) {
   }
 }
 
+async function findOneById(fileId) {
+  if (!fileId) {
+    throw new ValidationError({
+      message: "O id do arquivo não foi informado.",
+      action: "Informe o id do arquivo e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(fileId)) {
+    throw new ValidationError({
+      message: "O id do arquivo não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const fileFound = await runSelectQuery(fileId);
+
+  if (!fileFound) {
+    throw new NotFoundError({
+      message: "O arquivo não foi encontrado.",
+      action: "Verifique o id informado e tente novamente.",
+    });
+  }
+
+  return fileFound;
+
+  async function runSelectQuery(fileId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          rental_files.*,
+          users.username AS uploaded_by_username,
+          deleted_users.username AS deleted_by_username
+        FROM
+          rental_files
+          INNER JOIN users ON users.id = rental_files.uploaded_by
+          LEFT JOIN users AS deleted_users ON deleted_users.id = rental_files.deleted_by
+        WHERE
+          rental_files.id = $1
+        AND
+          rental_files.deleted_at IS NULL
+        ;`,
+      values: [fileId],
+    });
+
+    return results.rows[0];
+  }
+}
+
+async function deleteById(fileId, userId) {
+  const fileFound = await findOneById(fileId);
+
+  await runDeleteQuery(fileFound.id, userId);
+
+  async function runDeleteQuery(fileId, userId) {
+    await database.query({
+      text: `
+        UPDATE rental_files
+        SET
+          deleted_at = timezone('utc', now()),
+          deleted_by = $2
+        WHERE
+          id = $1
+        ;`,
+      values: [fileId, userId],
+    });
+  }
+}
+
 export default Object.freeze({
   create,
   findAllByRentalId,
+  findOneById,
+  deleteById,
   FILE_TYPES,
 });
