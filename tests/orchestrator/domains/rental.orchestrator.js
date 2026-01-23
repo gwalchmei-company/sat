@@ -55,6 +55,9 @@ async function createRentalFile(fileObject) {
 
 async function createContract(contractObject) {
   const createdRental = contractObject?.rental_id ? null : await createRental();
+  const deletedBy =
+    contractObject?.deleted_by ||
+    (await authOrchestrator.createAuthenticatedUser("admin")).user.id;
 
   const contractNumber =
     contractObject?.contract_number ||
@@ -73,6 +76,23 @@ async function createContract(contractObject) {
     signed_by: contractObject?.signed_by || null,
     deleted_by: contractObject?.deleted_by || null,
   });
+
+  // Se deleted_at for informado, atualiza o contrato para soft delete
+  if (contractObject?.deleted_at) {
+    const database = (await import("infra/database")).default;
+    const query = {
+      text: `
+        UPDATE contracts
+        SET deleted_at = $2, deleted_by = $3
+        WHERE id = $1
+        RETURNING *;
+      `,
+      values: [createdContract.id, contractObject.deleted_at, deletedBy],
+    };
+
+    const result = await database.query(query);
+    return result.rows[0];
+  }
 
   return createdContract;
 }

@@ -1,5 +1,5 @@
 import database from "infra/database";
-import { ValidationError } from "infra/errors";
+import { NotFoundError, ValidationError } from "infra/errors";
 import { validate as isValidUuid } from "uuid";
 import rental from "models/rental";
 
@@ -307,10 +307,138 @@ async function listByCustomerId(customerId) {
   }
 }
 
+async function findOneById(contractId) {
+  if (!contractId) {
+    throw new ValidationError({
+      message: "O id do contrato não foi informado.",
+      action: "Informe o id do contrato e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(contractId)) {
+    throw new ValidationError({
+      message: "O id do contrato não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const contractFound = await runSelectQuery(contractId);
+  return contractFound;
+
+  async function runSelectQuery(contractId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          contracts.*,
+          rentals.customer_id,
+          rentals.device_id,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username AS customer_username,
+          users.email AS customer_email,
+          signed_users.username AS signed_by_username
+        FROM
+          contracts
+          INNER JOIN rentals ON rentals.id = contracts.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+          LEFT JOIN users AS signed_users ON signed_users.id = contracts.signed_by
+        WHERE
+          contracts.id = $1
+        AND
+          contracts.deleted_at IS NULL
+        ;`,
+      values: [contractId],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O contrato informado não foi encontrado.",
+        action: "Verifique se o id informado está correto.",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function findOneByIdAndCustomerId(contractId, customerId) {
+  if (!contractId) {
+    throw new ValidationError({
+      message: "O id do contrato não foi informado.",
+      action: "Informe o id do contrato e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(contractId)) {
+    throw new ValidationError({
+      message: "O id do contrato não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  if (!customerId) {
+    throw new ValidationError({
+      message: "O id do cliente não foi informado.",
+      action: "Informe o id do cliente e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(customerId)) {
+    throw new ValidationError({
+      message: "O id do cliente não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const contractFound = await runSelectQuery(contractId, customerId);
+  return contractFound;
+
+  async function runSelectQuery(contractId, customerId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          contracts.*,
+          rentals.customer_id,
+          rentals.device_id,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username AS customer_username,
+          users.email AS customer_email,
+          signed_users.username AS signed_by_username
+        FROM
+          contracts
+          INNER JOIN rentals ON rentals.id = contracts.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+          LEFT JOIN users AS signed_users ON signed_users.id = contracts.signed_by
+        WHERE
+          contracts.id = $1
+        AND
+          rentals.customer_id = $2
+        AND
+          contracts.deleted_at IS NULL
+        ;`,
+      values: [contractId, customerId],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O contrato informado não foi encontrado.",
+        action: "Verifique se o id informado está correto.",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
 const contract = {
   create,
   listAll,
   listByCustomerId,
+  findOneById,
+  findOneByIdAndCustomerId,
 };
 
 export default contract;
