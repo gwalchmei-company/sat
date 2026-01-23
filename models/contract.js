@@ -224,8 +224,93 @@ async function create(contractObject) {
   }
 }
 
+async function listAll() {
+  const contractsList = await runSelectQuery();
+  return contractsList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          contracts.*,
+          rentals.customer_id,
+          rentals.device_id,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username AS customer_username,
+          users.email AS customer_email,
+          signed_users.username AS signed_by_username
+        FROM
+          contracts
+          INNER JOIN rentals ON rentals.id = contracts.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+          LEFT JOIN users AS signed_users ON signed_users.id = contracts.signed_by
+        WHERE
+          contracts.deleted_at IS NULL
+        ORDER BY
+          contracts.created_at DESC
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
+async function listByCustomerId(customerId) {
+  if (!customerId) {
+    throw new ValidationError({
+      message: "O id do cliente não foi informado.",
+      action: "Informe o id do cliente e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(customerId)) {
+    throw new ValidationError({
+      message: "O id do cliente não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const contractsList = await runSelectQuery(customerId);
+  return contractsList;
+
+  async function runSelectQuery(customerId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          contracts.*,
+          rentals.customer_id,
+          rentals.device_id,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username AS customer_username,
+          users.email AS customer_email,
+          signed_users.username AS signed_by_username
+        FROM
+          contracts
+          INNER JOIN rentals ON rentals.id = contracts.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+          LEFT JOIN users AS signed_users ON signed_users.id = contracts.signed_by
+        WHERE
+          rentals.customer_id = $1
+        AND
+          contracts.deleted_at IS NULL
+        ORDER BY
+          contracts.created_at DESC
+        ;`,
+      values: [customerId],
+    });
+
+    return results.rows;
+  }
+}
+
 const contract = {
   create,
+  listAll,
+  listByCustomerId,
 };
 
 export default contract;
