@@ -675,6 +675,89 @@ async function deleteContract(contractId, deletedByUserId) {
   }
 }
 
+async function sign(contractId, signedByUserId) {
+  if (!contractId) {
+    throw new ValidationError({
+      message: "O id do contrato não foi informado.",
+      action: "Informe o id do contrato e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(contractId)) {
+    throw new ValidationError({
+      message: "O id do contrato não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  if (!signedByUserId) {
+    throw new ValidationError({
+      message: "O id do usuário que está assinando não foi informado.",
+      action: "Informe o id do usuário e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(signedByUserId)) {
+    throw new ValidationError({
+      message: "O id do usuário que está assinando não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const currentContract = await findOneById(contractId);
+
+  validateContractCanBeSigned(currentContract);
+
+  const signedContract = await runSignQuery(contractId, signedByUserId);
+  return signedContract;
+
+  function validateContractCanBeSigned(currentContract) {
+    const allowedStatuses = ["draft", "generated", "sent"];
+
+    if (!allowedStatuses.includes(currentContract.status)) {
+      throw new ValidationError({
+        message: `Não é possível assinar um contrato com status "${currentContract.status}".`,
+        action: `O contrato deve estar em um dos seguintes status: ${allowedStatuses.join(", ")}.`,
+      });
+    }
+
+    if (currentContract.signed_at) {
+      throw new ValidationError({
+        message: "Este contrato já foi assinado.",
+        action: "Não é possível assinar um contrato que já foi assinado.",
+      });
+    }
+  }
+
+  async function runSignQuery(contractId, signedByUserId) {
+    const query = {
+      text: `
+        UPDATE contracts
+        SET 
+          status = 'signed',
+          signed_at = NOW(),
+          signed_by = $2,
+          updated_at = NOW()
+        WHERE id = $1
+        AND deleted_at IS NULL
+        RETURNING *;
+      `,
+      values: [contractId, signedByUserId],
+    };
+
+    const result = await database.query(query);
+
+    if (result.rowCount === 0) {
+      throw new ValidationError({
+        message: "O contrato informado não foi encontrado.",
+        action: "Verifique se o id informado está correto.",
+      });
+    }
+
+    return result.rows[0];
+  }
+}
+
 const contract = {
   create,
   listAll,
@@ -683,6 +766,7 @@ const contract = {
   findOneByIdAndCustomerId,
   update,
   delete: deleteContract,
+  sign,
 };
 
 export default contract;
