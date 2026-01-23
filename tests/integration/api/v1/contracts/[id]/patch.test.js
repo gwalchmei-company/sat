@@ -675,8 +675,9 @@ describe("PATCH /api/v1/contracts/[id]", () => {
       const rental = await orchestrator.createRental();
       const contract = await orchestrator.createContract({
         rental_id: rental.id,
-        deleted_at: new Date().toISOString(),
       });
+
+      await orchestrator.deleteContract(contract.id);
 
       const response = await fetch(
         `http://localhost:3000/api/v1/contracts/${contract.id}`,

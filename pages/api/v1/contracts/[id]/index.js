@@ -9,6 +9,7 @@ const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:contracts"), getHandler);
 router.patch(controller.canRequest("update:contracts"), patchHandler);
+router.delete(controller.canRequest("delete:contracts"), deleteHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -48,4 +49,13 @@ async function patchHandler(request, response) {
   const contractUpdated = await contract.update(contractId, contractData);
 
   return response.status(200).json(contractUpdated);
+}
+
+async function deleteHandler(request, response) {
+  const userLogged = request.context.user;
+  const contractId = request.query.id;
+
+  const contractDeleted = await contract.delete(contractId, userLogged.id);
+
+  return response.status(200).json(contractDeleted);
 }

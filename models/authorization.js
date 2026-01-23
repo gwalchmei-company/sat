@@ -375,6 +375,7 @@ const featuresRoles = {
     "read:contracts",
     "read:contracts:others",
     "update:contracts",
+    "delete:contracts",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -418,6 +419,7 @@ const featuresRoles = {
     "read:contracts",
     "read:contracts:others",
     "update:contracts",
+    "delete:contracts",
   ],
   operator: [
     ...DefaultUserFeatures,

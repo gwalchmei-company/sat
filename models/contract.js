@@ -616,6 +616,65 @@ async function update(contractId, contractObject) {
   }
 }
 
+async function deleteContract(contractId, deletedByUserId) {
+  if (!contractId) {
+    throw new ValidationError({
+      message: "O id do contrato não foi informado.",
+      action: "Informe o id do contrato e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(contractId)) {
+    throw new ValidationError({
+      message: "O id do contrato não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  if (!deletedByUserId) {
+    throw new ValidationError({
+      message: "O id do usuário que está deletando não foi informado.",
+      action: "Informe o id do usuário e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(deletedByUserId)) {
+    throw new ValidationError({
+      message: "O id do usuário que está deletando não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  await findOneById(contractId);
+
+  const deletedContract = await runDeleteQuery(contractId, deletedByUserId);
+  return deletedContract;
+
+  async function runDeleteQuery(contractId, deletedByUserId) {
+    const query = {
+      text: `
+        UPDATE contracts
+        SET deleted_at = NOW(), deleted_by = $2
+        WHERE id = $1
+        AND deleted_at IS NULL
+        RETURNING *;
+      `,
+      values: [contractId, deletedByUserId],
+    };
+
+    const result = await database.query(query);
+
+    if (result.rowCount === 0) {
+      throw new ValidationError({
+        message: "O contrato informado não foi encontrado ou já foi deletado.",
+        action: "Verifique se o id informado está correto.",
+      });
+    }
+
+    return result.rows[0];
+  }
+}
+
 const contract = {
   create,
   listAll,
@@ -623,6 +682,7 @@ const contract = {
   findOneById,
   findOneByIdAndCustomerId,
   update,
+  delete: deleteContract,
 };
 
 export default contract;
