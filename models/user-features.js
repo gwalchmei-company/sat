@@ -68,5 +68,6 @@ const availableFeatures = new Set([
   "read:contracts",
   "read:contracts:self",
   "read:contracts:others",
+  "update:contracts",
 ]);
 export default Object.freeze(availableFeatures);

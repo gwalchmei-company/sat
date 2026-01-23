@@ -433,12 +433,196 @@ async function findOneByIdAndCustomerId(contractId, customerId) {
   }
 }
 
+async function update(contractId, contractObject) {
+  const currentContract = await findOneById(contractId);
+
+  await validateContractUpdate(contractObject, currentContract);
+
+  const updatedContract = await runUpdateQuery(contractId, contractObject);
+  return updatedContract;
+
+  async function validateContractUpdate(contractObject, currentContract) {
+    if (!contractObject || Object.keys(contractObject).length === 0) {
+      throw new ValidationError({
+        message: "Nenhum dado foi informado para atualização.",
+        action: "Informe os dados que deseja atualizar e tente novamente.",
+      });
+    }
+
+    // Validar status
+    if (contractObject.status !== undefined) {
+      if (!CONTRACT_STATUS.includes(contractObject.status)) {
+        throw new ValidationError({
+          message: `O status "${contractObject.status}" não é válido.`,
+          action: `Informe um dos status válidos: ${CONTRACT_STATUS.join(", ")}.`,
+        });
+      }
+
+      // Validar transições de status
+      const currentStatus = currentContract.status;
+      const newStatus = contractObject.status;
+
+      // Não pode voltar de "signed" para outros status (exceto "canceled")
+      if (
+        currentStatus === "signed" &&
+        newStatus !== "signed" &&
+        newStatus !== "canceled"
+      ) {
+        throw new ValidationError({
+          message: `Não é possível alterar o status de "signed" para "${newStatus}".`,
+          action: 'Um contrato assinado só pode ser alterado para "canceled".',
+        });
+      }
+
+      // Não pode voltar de "canceled"
+      if (currentStatus === "canceled" && newStatus !== "canceled") {
+        throw new ValidationError({
+          message: "Não é possível alterar o status de um contrato cancelado.",
+          action: "Crie um novo contrato se necessário.",
+        });
+      }
+    }
+
+    // Validar pdf_url
+    if (
+      contractObject.pdf_url !== undefined &&
+      contractObject.pdf_url !== null
+    ) {
+      if (typeof contractObject.pdf_url !== "string") {
+        throw new ValidationError({
+          message: "A URL do PDF deve ser uma string.",
+          action: "Informe uma URL válida e tente novamente.",
+        });
+      }
+    }
+
+    // Validar file_hash
+    if (
+      contractObject.file_hash !== undefined &&
+      contractObject.file_hash !== null
+    ) {
+      if (typeof contractObject.file_hash !== "string") {
+        throw new ValidationError({
+          message: "O hash do arquivo deve ser uma string.",
+          action: "Informe um hash válido e tente novamente.",
+        });
+      }
+
+      if (contractObject.file_hash.length !== 64) {
+        throw new ValidationError({
+          message: "O hash do arquivo deve ter 64 caracteres (SHA256).",
+          action: "Informe um hash válido e tente novamente.",
+        });
+      }
+    }
+
+    // Validar expires_at
+    if (
+      contractObject.expires_at !== undefined &&
+      contractObject.expires_at !== null
+    ) {
+      const expiresAtDate = new Date(contractObject.expires_at);
+      if (isNaN(expiresAtDate.getTime())) {
+        throw new ValidationError({
+          message: "A data de expiração não é válida.",
+          action: "Informe uma data válida e tente novamente.",
+        });
+      }
+    }
+
+    // Validar signed_at
+    if (
+      contractObject.signed_at !== undefined &&
+      contractObject.signed_at !== null
+    ) {
+      const signedAtDate = new Date(contractObject.signed_at);
+      if (isNaN(signedAtDate.getTime())) {
+        throw new ValidationError({
+          message: "A data de assinatura não é válida.",
+          action: "Informe uma data válida e tente novamente.",
+        });
+      }
+    }
+
+    // Validar signed_by
+    if (
+      contractObject.signed_by !== undefined &&
+      contractObject.signed_by !== null
+    ) {
+      if (!isValidUuid(contractObject.signed_by)) {
+        throw new ValidationError({
+          message: "O id do usuário que assinou não é válido.",
+          action: "Informe um id válido e tente novamente.",
+        });
+      }
+    }
+  }
+
+  async function runUpdateQuery(contractId, contractObject) {
+    const updateFields = [];
+    const values = [];
+    let paramCounter = 1;
+
+    const allowedFields = [
+      "status",
+      "pdf_url",
+      "file_hash",
+      "expires_at",
+      "signed_at",
+      "signed_by",
+    ];
+
+    for (const field of allowedFields) {
+      if (contractObject[field] !== undefined) {
+        updateFields.push(`${field} = $${paramCounter}`);
+        values.push(contractObject[field]);
+        paramCounter++;
+      }
+    }
+
+    if (updateFields.length === 0) {
+      throw new ValidationError({
+        message: "Nenhum campo válido foi informado para atualização.",
+        action: "Informe pelo menos um campo válido e tente novamente.",
+      });
+    }
+
+    // Adicionar updated_at
+    updateFields.push(`updated_at = NOW()`);
+
+    values.push(contractId);
+
+    const query = {
+      text: `
+        UPDATE contracts
+        SET ${updateFields.join(", ")}
+        WHERE id = $${paramCounter}
+        AND deleted_at IS NULL
+        RETURNING *;
+      `,
+      values: values,
+    };
+
+    const result = await database.query(query);
+
+    if (result.rowCount === 0) {
+      throw new ValidationError({
+        message: "O contrato informado não foi encontrado.",
+        action: "Verifique se o id informado está correto.",
+      });
+    }
+
+    return result.rows[0];
+  }
+}
+
 const contract = {
   create,
   listAll,
   listByCustomerId,
   findOneById,
   findOneByIdAndCustomerId,
+  update,
 };
 
 export default contract;

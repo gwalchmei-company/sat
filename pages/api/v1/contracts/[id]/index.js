@@ -8,6 +8,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:contracts"), getHandler);
+router.patch(controller.canRequest("update:contracts"), patchHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -38,4 +39,13 @@ async function getHandler(request, response) {
   }
 
   return response.status(200).json(contractFound);
+}
+
+async function patchHandler(request, response) {
+  const contractId = request.query.id;
+  const contractData = request.body;
+
+  const contractUpdated = await contract.update(contractId, contractData);
+
+  return response.status(200).json(contractUpdated);
 }
