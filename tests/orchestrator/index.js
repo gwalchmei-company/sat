@@ -7,6 +7,7 @@ import device from "./domains/device.orchestrator.js";
 import rental from "./domains/rental.orchestrator.js";
 import financial from "./domains/financial.orchestrator.js";
 import order from "./domains/order.orchestrator.js";
+import contract from "./domains/contracts.orchestrator.js";
 
 const orchestrator = {
   ...infra,
@@ -17,6 +18,7 @@ const orchestrator = {
   ...rental,
   ...financial,
   ...order,
+  ...contract,
 };
 
 export default orchestrator;
