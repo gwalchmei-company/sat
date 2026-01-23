@@ -171,6 +171,9 @@ describe("POST /api/v1/contracts", () => {
         signed_by: null,
         created_at: expect.any(String),
         updated_at: expect.any(String),
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
         deleted_at: null,
         deleted_by: null,
       });
@@ -213,6 +216,9 @@ describe("POST /api/v1/contracts", () => {
         updated_at: expect.any(String),
         deleted_at: null,
         deleted_by: null,
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
       });
     });
 
@@ -257,6 +263,9 @@ describe("POST /api/v1/contracts", () => {
         updated_at: expect.any(String),
         deleted_at: null,
         deleted_by: null,
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
       });
     });
 
@@ -792,6 +801,9 @@ describe("POST /api/v1/contracts", () => {
         signed_by: null,
         created_at: expect.any(String),
         updated_at: expect.any(String),
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
         deleted_at: null,
         deleted_by: null,
       });

@@ -24,6 +24,9 @@ async function createContract(contractObject) {
     signed_at: contractObject?.signed_at || null,
     signed_by: contractObject?.signed_by || null,
     deleted_by: contractObject?.deleted_by || null,
+    cancel_reason: contractObject?.cancel_reason || null,
+    canceled_at: contractObject?.canceled_at || null,
+    canceled_by: contractObject?.canceled_by || null,
   });
 
   return createdContract;

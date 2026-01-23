@@ -198,9 +198,12 @@ async function create(contractObject) {
           previous_contract_id,
           signed_at,
           signed_by,
-          deleted_by
+          deleted_by,
+          cancel_reason,
+          canceled_at,
+          canceled_by
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
         )
         RETURNING *;
       `,
@@ -216,6 +219,9 @@ async function create(contractObject) {
         contractObject.signed_at || null,
         contractObject.signed_by || null,
         contractObject.deleted_by || null,
+        contractObject.cancel_reason || null,
+        contractObject.canceled_at || null,
+        contractObject.canceled_by || null,
       ],
     };
 

@@ -86,6 +86,9 @@ describe("GET /api/v1/contracts/[id]", () => {
         customer_username: user.username,
         customer_email: user.email,
         signed_by_username: null,
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
       });
     });
 
@@ -221,6 +224,9 @@ describe("GET /api/v1/contracts/[id]", () => {
         customer_username: responseBody.customer_username,
         customer_email: responseBody.customer_email,
         signed_by_username: responseBody.signed_by_username,
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
       });
     });
 

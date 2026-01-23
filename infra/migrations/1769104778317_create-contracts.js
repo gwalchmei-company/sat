@@ -59,6 +59,20 @@ exports.up = (pgm) => {
       notNull: true,
       default: pgm.func("timezone('utc', now())"),
     },
+    canceled_at: {
+      type: "timestamptz",
+      notNull: false,
+    },
+    canceled_by: {
+      type: "uuid",
+      notNull: false,
+      references: "users(id)",
+      onDelete: "RESTRICT",
+    },
+    cancel_reason: {
+      type: "text",
+      notNull: false,
+    },
     updated_at: {
       type: "timestamptz",
       notNull: true,

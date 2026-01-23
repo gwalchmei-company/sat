@@ -93,6 +93,9 @@ describe("GET /api/v1/contracts", () => {
         customer_username: user.username,
         customer_email: user.email,
         signed_by_username: null,
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
       });
 
       expect(secoundElement).toEqual({
@@ -118,6 +121,9 @@ describe("GET /api/v1/contracts", () => {
         customer_username: user.username,
         customer_email: user.email,
         signed_by_username: null,
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
       });
 
       expect(responseBody.length).toBe(2);
@@ -232,6 +238,9 @@ describe("GET /api/v1/contracts", () => {
         customer_username: contractResponse.customer_username,
         customer_email: contractResponse.customer_email,
         signed_by_username: contractResponse.signed_by_username,
+        cancel_reason: null,
+        canceled_at: null,
+        canceled_by: null,
       });
     });
 
