@@ -764,6 +764,164 @@ async function sign(contractId, signedByUserId) {
   }
 }
 
+async function cancel(contractId, canceledByUserId, cancelOptions = {}) {
+  if (!contractId) {
+    throw new ValidationError({
+      message: "O id do contrato não foi informado.",
+      action: "Informe o id do contrato e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(contractId)) {
+    throw new ValidationError({
+      message: "O id do contrato não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  if (!canceledByUserId) {
+    throw new ValidationError({
+      message: "O id do usuário que está cancelando não foi informado.",
+      action: "Informe o id do usuário e tente novamente.",
+    });
+  }
+
+  if (!isValidUuid(canceledByUserId)) {
+    throw new ValidationError({
+      message: "O id do usuário que está cancelando não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const currentContract = await findOneById(contractId);
+
+  validateContractCanBeCanceled(currentContract, cancelOptions);
+
+  if (cancelOptions.canceled_at) {
+    const canceledContract = await runScheduleCancelQuery(
+      contractId,
+      canceledByUserId,
+      cancelOptions.canceled_at,
+      cancelOptions.cancel_reason,
+    );
+    return canceledContract;
+  }
+
+  const canceledContract = await runCancelQuery(
+    contractId,
+    canceledByUserId,
+    cancelOptions.cancel_reason,
+  );
+  return canceledContract;
+
+  function validateContractCanBeCanceled(currentContract, cancelOptions) {
+    const allowedStatuses = ["draft", "signed"];
+
+    if (!allowedStatuses.includes(currentContract.status)) {
+      throw new ValidationError({
+        message: `Não é possível cancelar um contrato com status "${currentContract.status}".`,
+        action: `O contrato deve estar em um dos seguintes status: ${allowedStatuses.join(", ")}.`,
+      });
+    }
+
+    if (currentContract.status === "canceled") {
+      throw new ValidationError({
+        message: "Este contrato já foi cancelado.",
+        action: "Não é possível cancelar um contrato que já foi cancelado.",
+      });
+    }
+
+    if (cancelOptions.canceled_at) {
+      if (currentContract.status !== "signed") {
+        throw new ValidationError({
+          message:
+            "Só é possível agendar cancelamento para contratos assinados (ativos).",
+          action: "Para contratos em draft, faça o cancelamento imediato.",
+        });
+      }
+
+      const cancelAtDate = new Date(cancelOptions.canceled_at);
+      const now = new Date();
+
+      if (isNaN(cancelAtDate.getTime())) {
+        throw new ValidationError({
+          message: "A data de cancelamento não é válida.",
+          action: "Informe uma data válida no formato ISO 8601.",
+        });
+      }
+
+      if (cancelAtDate <= now) {
+        throw new ValidationError({
+          message: "A data de cancelamento deve ser no futuro.",
+          action: "Informe uma data futura para agendar o cancelamento.",
+        });
+      }
+    }
+  }
+
+  async function runScheduleCancelQuery(
+    contractId,
+    canceledByUserId,
+    canceledAt,
+    cancelReason,
+  ) {
+    const query = {
+      text: `
+        UPDATE contracts
+        SET 
+          canceled_at = $2,
+          canceled_by = $3,
+          cancel_reason = $4,
+          updated_at = NOW()
+        WHERE id = $1
+        AND deleted_at IS NULL
+        RETURNING *;
+      `,
+      values: [contractId, canceledAt, canceledByUserId, cancelReason || null],
+    };
+
+    const result = await database.query(query);
+
+    if (result.rowCount === 0) {
+      throw new ValidationError({
+        message: "O contrato informado não foi encontrado.",
+        action: "Verifique se o id informado está correto.",
+      });
+    }
+
+    return result.rows[0];
+  }
+
+  async function runCancelQuery(contractId, canceledByUserId, cancelReason) {
+    const query = {
+      text: `
+        UPDATE contracts
+        SET 
+          status = 'canceled',
+          canceled_at = NOW(),
+          canceled_by = $2,
+          cancel_reason = $3,
+          updated_at = NOW()
+        WHERE id = $1
+        AND deleted_at IS NULL
+        RETURNING *;
+      `,
+      values: [contractId, canceledByUserId, cancelReason || null],
+    };
+
+    const result = await database.query(query);
+
+    if (result.rowCount === 0) {
+      throw new ValidationError({
+        message: "O contrato informado não foi encontrado.",
+        action: "Verifique se o id informado está correto.",
+      });
+    }
+
+    return result.rows[0];
+  }
+}
+
 const contract = {
   create,
   listAll,
@@ -773,6 +931,7 @@ const contract = {
   update,
   delete: deleteContract,
   sign,
+  cancel,
 };
 
 export default contract;

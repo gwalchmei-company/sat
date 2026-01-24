@@ -178,6 +178,9 @@ describe("Use case: complete contract workflow", () => {
       version: 1,
       deleted_at: null,
       deleted_by: null,
+      cancel_reason: null,
+      canceled_at: null,
+      canceled_by: null,
     });
 
     expect(receivedContract.updated_at > contract.updated_at).toBe(true);
