@@ -464,6 +464,9 @@ const featuresRoles = {
 
     "read:contracts",
     "read:contracts:others",
+
+    "read:financialincome",
+    "read:financialincome:others",
   ],
   support: [
     ...DefaultUserFeatures,
@@ -483,6 +486,9 @@ const featuresRoles = {
 
     "read:contracts",
     "read:contracts:others",
+
+    "read:financialincome",
+    "read:financialincome:others",
   ],
 };
 

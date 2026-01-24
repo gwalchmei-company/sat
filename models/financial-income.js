@@ -74,6 +74,57 @@ async function listByCustomerId(customerId) {
   }
 }
 
+async function findOneById(id) {
+  if (!isValidUuid(id)) {
+    throw new ValidationError({
+      message: "O id informado não foi encontrado ou é inválido.",
+      action: "Verifique o id e tente novamente.",
+    });
+  }
+
+  const financialIncomeFound = await runSelectQuery(id);
+  return financialIncomeFound;
+
+  async function runSelectQuery(id) {
+    const results = await database.query({
+      text: `
+        SELECT
+          financial_income.*,
+          rentals.customer_id,
+          rentals.start_date,
+          rentals.end_date,
+          rentals.status AS rental_status,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf
+        FROM
+          financial_income
+          INNER JOIN rentals ON rentals.id = financial_income.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          financial_income.id = $1
+        AND
+          financial_income.deleted_at IS NULL
+        LIMIT
+          1
+        ;`,
+      values: [id],
+    });
+
+    if (results.rowCount === 0) {
+      throw new ValidationError({
+        message: "O id informado não foi encontrado no sistema.",
+        action: "Verifique se o id está digitado corretamente.",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
 async function create(financialIncomeObject) {
   await validateFields(financialIncomeObject);
   const createdFinancialIncome = await runInsertQuery(financialIncomeObject);
@@ -291,6 +342,7 @@ async function create(financialIncomeObject) {
 export default Object.freeze({
   listAll,
   listByCustomerId,
+  findOneById,
   create,
   PAYMENT_METHODS,
 });
