@@ -8,6 +8,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.get(controller.canRequest("read:financialincome"), getHandler);
+router.patch(controller.canRequest("update:financialincome"), patchHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -43,4 +44,22 @@ async function getHandler(request, response) {
   }
 
   return response.status(200).json(financialIncomeFound);
+}
+
+async function patchHandler(request, response) {
+  const financialIncomeId = request.query.id;
+  const insecureInput = request.body;
+
+  const secureInputValues = authorization.filterInput(
+    request.context.user,
+    "update:financialincome",
+    insecureInput,
+  );
+
+  const updatedFinancialIncome = await financialIncome.update(
+    financialIncomeId,
+    secureInputValues,
+  );
+
+  return response.status(200).json(updatedFinancialIncome);
 }

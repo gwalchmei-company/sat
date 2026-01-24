@@ -235,6 +235,30 @@ function filterInput(user, feature, input, target) {
     };
   }
 
+  if (feature === "update:financialincome" && can(user, feature, target)) {
+    const denytedFields = ["rental_id", "id", "created_at", "deleted_at"];
+    for (const field of denytedFields) {
+      if (input[field] !== undefined) {
+        throw new ValidationError({
+          message: `O campo "${field}" não pode ser atualizado.`,
+          action: `Remova o campo "${field}" e tente novamente.`,
+        });
+      }
+    }
+
+    filteredInputValues = {
+      amount_in_cents: input?.amount_in_cents,
+      payment_method: input?.payment_method,
+      received_at: input?.received_at,
+      reference_date: input?.reference_date,
+      description: input?.description,
+      installment_number: input?.installment_number,
+      total_installments: input?.total_installments,
+      transaction_id: input?.transaction_id,
+      notes: input?.notes,
+    };
+  }
+
   // Remove undefined values
   const cleanedInput = {};
   for (const key in filteredInputValues) {
@@ -391,6 +415,7 @@ const featuresRoles = {
     "create:financialincome",
     "read:financialincome",
     "read:financialincome:others",
+    "update:financialincome",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -443,6 +468,7 @@ const featuresRoles = {
     "create:financialincome",
     "read:financialincome",
     "read:financialincome:others",
+    "update:financialincome",
   ],
   operator: [
     ...DefaultUserFeatures,

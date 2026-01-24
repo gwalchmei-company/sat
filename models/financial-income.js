@@ -339,10 +339,192 @@ async function create(financialIncomeObject) {
   }
 }
 
+async function update(id, financialIncomeInputValues) {
+  const currentFinancialIncome = await findOneById(id);
+  const financialIncomeWithNewValues = {
+    ...currentFinancialIncome,
+    ...financialIncomeInputValues,
+  };
+  console.log(financialIncomeInputValues);
+
+  validateUpdateFields(financialIncomeInputValues);
+
+  const updatedFinancialIncome = await runUpdateQuery(
+    financialIncomeWithNewValues,
+  );
+  return updatedFinancialIncome;
+
+  async function runUpdateQuery(financialIncomeWithNewValues) {
+    const results = await database.query({
+      text: `
+        UPDATE
+          financial_income
+        SET
+          amount_in_cents = $2,
+          payment_method = $3,
+          received_at = $4,
+          reference_date = $5,
+          description = $6,
+          installment_number = $7,
+          total_installments = $8,
+          transaction_id = $9,
+          notes = $10,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+        RETURNING
+          *
+      `,
+      values: [
+        financialIncomeWithNewValues.id,
+        financialIncomeWithNewValues.amount_in_cents,
+        financialIncomeWithNewValues.payment_method,
+        financialIncomeWithNewValues.received_at,
+        financialIncomeWithNewValues.reference_date,
+        financialIncomeWithNewValues.description,
+        financialIncomeWithNewValues.installment_number,
+        financialIncomeWithNewValues.total_installments,
+        financialIncomeWithNewValues.transaction_id,
+        financialIncomeWithNewValues.notes,
+      ],
+    });
+    return results.rows[0];
+  }
+
+  function validateUpdateFields(input) {
+    if (input.amount_in_cents !== undefined && input.amount_in_cents !== null) {
+      if (typeof input.amount_in_cents !== "number") {
+        throw new ValidationError({
+          message: "O valor deve ser um número.",
+          action: "Informe um valor válido para realizar esta operação.",
+        });
+      }
+
+      if (input.amount_in_cents < 0) {
+        throw new ValidationError({
+          message: "O valor não pode ser negativo.",
+          action: "Informe um valor válido para realizar esta operação.",
+        });
+      }
+    }
+
+    if (input.payment_method !== undefined && input.payment_method !== null) {
+      if (!PAYMENT_METHODS.includes(input.payment_method)) {
+        throw new ValidationError({
+          message: `O método de pagamento "${input.payment_method}" não é válido.`,
+          action: `Informe um dos métodos válidos: ${PAYMENT_METHODS.join(", ")}.`,
+        });
+      }
+    }
+
+    if (input.received_at !== undefined && input.received_at !== null) {
+      const receivedDate = new Date(input.received_at);
+      if (isNaN(receivedDate.getTime())) {
+        throw new ValidationError({
+          message: "A data de recebimento é inválida.",
+          action: "Insira uma data de recebimento válida.",
+        });
+      }
+    }
+
+    if (input.reference_date !== undefined && input.reference_date !== null) {
+      const referenceDate = new Date(input.reference_date);
+      if (isNaN(referenceDate.getTime())) {
+        throw new ValidationError({
+          message: "A data de referência é inválida.",
+          action: "Insira uma data de referência válida.",
+        });
+      }
+    }
+
+    if (input.description !== undefined && input.description !== null) {
+      if (typeof input.description !== "string") {
+        throw new ValidationError({
+          message: "A descrição deve ser uma string.",
+          action: "Informe uma descrição válida.",
+        });
+      }
+    }
+
+    if (
+      input.installment_number !== undefined &&
+      input.installment_number !== null
+    ) {
+      if (typeof input.installment_number !== "number") {
+        throw new ValidationError({
+          message: "O número da parcela deve ser um número.",
+          action: "Informe um número de parcela válido.",
+        });
+      }
+
+      if (input.installment_number < 1) {
+        throw new ValidationError({
+          message: "O número da parcela deve ser maior ou igual a 1.",
+          action: "Informe um número de parcela válido.",
+        });
+      }
+    }
+
+    if (
+      input.total_installments !== undefined &&
+      input.total_installments !== null
+    ) {
+      if (typeof input.total_installments !== "number") {
+        throw new ValidationError({
+          message: "O total de parcelas deve ser um número.",
+          action: "Informe um total de parcelas válido.",
+        });
+      }
+
+      if (input.total_installments < 1) {
+        throw new ValidationError({
+          message: "O total de parcelas deve ser maior ou igual a 1.",
+          action: "Informe um total de parcelas válido.",
+        });
+      }
+    }
+
+    if (
+      input.installment_number !== undefined &&
+      input.total_installments !== undefined &&
+      input.installment_number > input.total_installments
+    ) {
+      throw new ValidationError({
+        message:
+          "O número da parcela não pode ser maior que o total de parcelas.",
+        action: "Verifique os valores informados.",
+      });
+    }
+
+    if (
+      input.transaction_id !== undefined &&
+      input.transaction_id !== null &&
+      typeof input.transaction_id !== "string"
+    ) {
+      throw new ValidationError({
+        message: "O ID da transação deve ser uma string.",
+        action: "Informe um ID de transação válido.",
+      });
+    }
+
+    if (
+      input.notes !== undefined &&
+      input.notes !== null &&
+      typeof input.notes !== "string"
+    ) {
+      throw new ValidationError({
+        message: "As observações devem ser uma string.",
+        action: "Informe observações válidas.",
+      });
+    }
+  }
+}
+
 export default Object.freeze({
   listAll,
   listByCustomerId,
   findOneById,
   create,
+  update,
   PAYMENT_METHODS,
 });
