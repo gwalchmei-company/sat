@@ -76,5 +76,13 @@ const availableFeatures = new Set([
   "cancel:contracts",
   "cancel:contracts:self",
   "cancel:contracts:others",
+
+  // FINANCIAL INCOME
+  "create:financialincome",
+  "read:financialincome",
+  "read:financialincome:self",
+  "read:financialincome:others",
+  "update:financialincome",
+  "delete:financialincome",
 ]);
 export default Object.freeze(availableFeatures);
