@@ -319,6 +319,13 @@ const featuresRoles = {
 
     "read:rentalfiles",
     "read:rentalfiles:self",
+
+    "read:contracts",
+    "read:contracts:self",
+    "sign:contracts",
+    "sign:contracts:self",
+    "cancel:contracts",
+    "cancel:contracts:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -367,6 +374,16 @@ const featuresRoles = {
     "read:rentalfiles",
     "read:rentalfiles:others",
     "delete:rentalfiles",
+
+    "create:contracts",
+    "read:contracts",
+    "read:contracts:others",
+    "update:contracts",
+    "delete:contracts",
+    "sign:contracts",
+    "sign:contracts:others",
+    "cancel:contracts",
+    "cancel:contracts:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -405,6 +422,16 @@ const featuresRoles = {
     "read:rentalfiles",
     "read:rentalfiles:others",
     "delete:rentalfiles",
+
+    "create:contracts",
+    "read:contracts",
+    "read:contracts:others",
+    "update:contracts",
+    "delete:contracts",
+    "sign:contracts",
+    "sign:contracts:others",
+    "cancel:contracts",
+    "cancel:contracts:others",
   ],
   operator: [
     ...DefaultUserFeatures,
@@ -423,6 +450,9 @@ const featuresRoles = {
     "read:rentalfiles",
     "read:rentalfiles:others",
     "delete:rentalfiles",
+
+    "read:contracts",
+    "read:contracts:others",
   ],
   support: [
     ...DefaultUserFeatures,
@@ -439,6 +469,9 @@ const featuresRoles = {
     "read:rentalfiles",
     "read:rentalfiles:others",
     "delete:rentalfiles",
+
+    "read:contracts",
+    "read:contracts:others",
   ],
 };
 
