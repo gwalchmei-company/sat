@@ -416,6 +416,7 @@ const featuresRoles = {
     "read:financialincome",
     "read:financialincome:others",
     "update:financialincome",
+    "delete:financialincome",
   ],
   manager: [
     ...DefaultUserFeatures,

@@ -520,11 +520,33 @@ async function update(id, financialIncomeInputValues) {
   }
 }
 
+async function Delete(id) {
+  const financialIncomeToDelete = await findOneById(id);
+
+  await runDeleteQuery(financialIncomeToDelete.id);
+  return;
+
+  async function runDeleteQuery(id) {
+    await database.query({
+      text: `
+        UPDATE
+          financial_income
+        SET
+          deleted_at = timezone('utc', now())
+        WHERE
+          id = $1
+        ;`,
+      values: [id],
+    });
+  }
+}
+
 export default Object.freeze({
   listAll,
   listByCustomerId,
   findOneById,
   create,
   update,
+  Delete,
   PAYMENT_METHODS,
 });
