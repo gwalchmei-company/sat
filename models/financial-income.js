@@ -5,6 +5,75 @@ import rental from "models/rental";
 
 const PAYMENT_METHODS = ["PIX", "CASH", "CARD", "TRANSFER", "BANK_SLIP"];
 
+async function listAll() {
+  const financialIncomeList = await runSelectQuery();
+  return financialIncomeList;
+
+  async function runSelectQuery() {
+    const results = await database.query({
+      text: `
+        SELECT
+          financial_income.*,
+          rentals.start_date,
+          rentals.end_date,
+          rentals.status AS rental_status,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf
+        FROM
+          financial_income
+          INNER JOIN rentals ON rentals.id = financial_income.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          financial_income.deleted_at IS NULL
+        ORDER BY
+          financial_income.received_at DESC
+        ;`,
+    });
+
+    return results.rows;
+  }
+}
+
+async function listByCustomerId(customerId) {
+  const financialIncomeList = await runSelectQuery(customerId);
+  return financialIncomeList;
+
+  async function runSelectQuery(customerId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          financial_income.*,
+          rentals.start_date,
+          rentals.end_date,
+          rentals.status AS rental_status,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf
+        FROM
+          financial_income
+          INNER JOIN rentals ON rentals.id = financial_income.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          rentals.customer_id = $1
+        AND
+          financial_income.deleted_at IS NULL
+        ORDER BY
+          financial_income.received_at DESC
+        ;`,
+      values: [customerId],
+    });
+
+    return results.rows;
+  }
+}
+
 async function create(financialIncomeObject) {
   await validateFields(financialIncomeObject);
   const createdFinancialIncome = await runInsertQuery(financialIncomeObject);
@@ -220,6 +289,8 @@ async function create(financialIncomeObject) {
 }
 
 export default Object.freeze({
+  listAll,
+  listByCustomerId,
   create,
   PAYMENT_METHODS,
 });

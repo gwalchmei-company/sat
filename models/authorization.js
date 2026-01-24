@@ -326,6 +326,9 @@ const featuresRoles = {
     "sign:contracts:self",
     "cancel:contracts",
     "cancel:contracts:self",
+
+    "read:financialincome",
+    "read:financialincome:self",
   ],
   admin: [
     ...DefaultUserFeatures,
@@ -386,6 +389,8 @@ const featuresRoles = {
     "cancel:contracts:others",
 
     "create:financialincome",
+    "read:financialincome",
+    "read:financialincome:others",
   ],
   manager: [
     ...DefaultUserFeatures,
@@ -436,6 +441,8 @@ const featuresRoles = {
     "cancel:contracts:others",
 
     "create:financialincome",
+    "read:financialincome",
+    "read:financialincome:others",
   ],
   operator: [
     ...DefaultUserFeatures,
