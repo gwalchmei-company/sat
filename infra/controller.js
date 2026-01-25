@@ -1,5 +1,6 @@
 import * as cookie from "cookie";
 import session from "models/session.js";
+import "infra/events/listeners.js";
 
 import {
   InternalServerError,

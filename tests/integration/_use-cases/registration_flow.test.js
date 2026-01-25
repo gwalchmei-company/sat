@@ -56,6 +56,8 @@ describe("Use case: Registration Flow (all successfull)", () => {
   });
 
   test("Receive activation email", async () => {
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const lastEmail = await orchestrator.getLastEmail();
 
     expect(lastEmail.sender).toBe("<contato@gwalchmei.com.br>");
