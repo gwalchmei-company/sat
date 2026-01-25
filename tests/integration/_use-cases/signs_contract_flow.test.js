@@ -42,6 +42,32 @@ describe("Use case: complete contract workflow", () => {
 
     expect(customerOrder.status).toBe(201);
     customerOrder = await customerOrder.json();
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) => email.recipients[0] === `<${customer.user.email}>`,
+      (email) => email.subject[0] === "Seu pedido foi criado com sucesso!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.recipients[0]).toBe(`<${customer.user.email}>`);
+    expect(emailToCustomer.text === "").toBe(false);
+
+    const emailToAdmin = allEmails.find(
+      (email) => email.recipients.includes("<ryan@gwalchmei.com.br>"),
+      (email) =>
+        email.subject[0] === `Novo pedido criado - ID ${customerOrder.id}`,
+    );
+
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.recipients).toContain("<ryan@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
   });
 
   test("admin approves rental request", async () => {
