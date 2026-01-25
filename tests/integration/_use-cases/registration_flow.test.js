@@ -95,6 +95,17 @@ describe("Use case: Registration Flow (all successfull)", () => {
 
     const activatedUser = await user.findOneByUsername("RegistrationFlow");
     expect(activatedUser.features).toEqual(["create:session", "read:session"]);
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const emailAfterActivation = await orchestrator.getLastEmail();
+
+    expect(emailAfterActivation.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailAfterActivation.recipients[0]).toBe(
+      "<registration.flow@gwalchmei.com.br>",
+    );
+    expect(emailAfterActivation.subject).toBe("Cadastro ativado com sucesso!");
+    expect(emailAfterActivation.text).toContain("RegistrationFlow");
   });
 
   test("Login", async () => {
