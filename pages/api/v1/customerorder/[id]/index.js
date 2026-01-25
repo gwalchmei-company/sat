@@ -3,6 +3,8 @@ import controller from "infra/controller.js";
 import customerOrder from "models/customer-order";
 import authorization from "models/authorization";
 import { ForbiddenError } from "infra/errors";
+import { createEvent, eventDispatcher } from "infra/events";
+import user from "models/user";
 
 const router = createRouter();
 
@@ -65,6 +67,29 @@ async function patchHandler(request, response) {
     orderRequestsId,
     valuesFiltered,
   );
+
+  if (
+    valuesFiltered.status &&
+    valuesFiltered.status !== targetOrder.status &&
+    updatedOrder.customer_id
+  ) {
+    const customer = await user.findOneById(updatedOrder.customer_id);
+
+    await eventDispatcher.dispatch(
+      createEvent({
+        type: "ORDER_STATUS_CHANGED",
+        entity: "CUSTOMER_ORDER",
+        entityId: updatedOrder.id,
+        payload: {
+          customer,
+          previousStatus: targetOrder.status,
+          newStatus: valuesFiltered.status,
+          order: updatedOrder,
+          changedBy: userLogged,
+        },
+      }),
+    );
+  }
 
   return response.status(200).json(updatedOrder);
 }

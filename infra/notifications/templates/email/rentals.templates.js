@@ -84,3 +84,58 @@ Acesse o painel administrativo para revisar os detalhes do pedido
 Por favor, analise as informações do pedido e tome as medidas necessárias.
 `;
 }
+
+export function orderRejectedCustomerTemplateEmail(order, customer) {
+  return `Olá ${customer.username}, lamentamos informar que seu pedido de ID ${order.id} foi rejeitado.
+
+Se você tiver alguma dúvida ou precisar de mais informações, 
+não hesite em entrar em contato conosco.
+
+Atenciosamente,
+Equipe Gwalchmei
+  `;
+}
+
+export function orderCompletedCustomerTemplateEmail(order, customer) {
+  return `Olá ${customer.username}, seu pedido de ID ${order.id} foi concluído com sucesso.
+
+Agradecemos por utilizar nossos serviços. Esperamos atendê-lo novamente em breve!
+
+Atenciosamente,
+Equipe Gwalchmei
+      `;
+}
+
+export function orderCanceledCustomerTemplateEmail(order, customer) {
+  return `Olá ${customer.username}, seu pedido de ID ${order.id} foi cancelado.
+
+Se você tiver alguma dúvida ou precisar de mais informações, 
+não hesite em entrar em contato conosco.
+
+Atenciosamente,
+Equipe Gwalchmei
+      `;
+}
+
+export function orderStatusChangedCustomerTemplateEmail(
+  newStatus,
+  order,
+  customer,
+) {
+  switch (newStatus) {
+    case "rejected":
+      return orderRejectedCustomerTemplateEmail(order, customer);
+    case "completed":
+      return orderCompletedCustomerTemplateEmail(order, customer);
+    case "canceled":
+      return orderCanceledCustomerTemplateEmail(order, customer);
+    default:
+      return `Olá ${customer.username}, o status do seu pedido de ID ${order.id} foi atualizado.
+
+Acesse o painel do cliente para mais informações.
+
+Atenciosamente,
+Equipe Gwalchmei
+      `;
+  }
+}

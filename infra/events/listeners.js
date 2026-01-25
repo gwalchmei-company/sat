@@ -9,6 +9,7 @@ import {
   orderApprovedCustomerTemplateEmail,
   orderCreatedAdminTemplateEmail,
   orderCreatedCustomerTemplateEmail,
+  orderStatusChangedCustomerTemplateEmail,
 } from "infra/notifications/templates/email/rentals.templates";
 
 const EMAIL_SENDER_DEFAULT = "Gwalchmei <contato@gwalchmei.com.br>";
@@ -88,6 +89,27 @@ eventDispatcher.on("ORDER_APPROVED", async (event) => {
         approved_by,
         order,
         rental,
+        customer,
+      ),
+    },
+  });
+});
+
+eventDispatcher.on("ORDER_STATUS_CHANGED", async (event) => {
+  const { previousStatus, newStatus, order, changedBy, customer } =
+    event.payload;
+
+  sendNotification({
+    channel: "EMAIL",
+    params: {
+      from: EMAIL_SENDER_DEFAULT,
+      to: [customer.email],
+      subject: "Atualização do status do seu pedido",
+      text: orderStatusChangedCustomerTemplateEmail(
+        previousStatus,
+        newStatus,
+        order,
+        changedBy,
         customer,
       ),
     },
