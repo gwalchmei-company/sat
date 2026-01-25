@@ -86,7 +86,12 @@ Por favor, analise as informações do pedido e tome as medidas necessárias.
 }
 
 export function orderRejectedCustomerTemplateEmail(order, customer) {
-  return `Olá ${customer.username}, lamentamos informar que seu pedido de ID ${order.id} foi rejeitado.
+  return `Olá ${customer.username}, lamentamos informar que seu pedido de ID ${order.id} não atendeu aos critérios necessários para aprovação.
+Dentre os motivos possíveis estão:
+- Informações incompletas ou incorretas no pedido.
+- Falta de documentação necessária.
+- Restrições de crédito ou histórico financeiro.
+- Outros critérios específicos da empresa.
 
 Se você tiver alguma dúvida ou precisar de mais informações, 
 não hesite em entrar em contato conosco.
