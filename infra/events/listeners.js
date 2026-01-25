@@ -96,8 +96,7 @@ eventDispatcher.on("ORDER_APPROVED", async (event) => {
 });
 
 eventDispatcher.on("ORDER_STATUS_CHANGED", async (event) => {
-  const { previousStatus, newStatus, order, changedBy, customer } =
-    event.payload;
+  const { newStatus, order, customer } = event.payload;
 
   sendNotification({
     channel: "EMAIL",
@@ -105,13 +104,7 @@ eventDispatcher.on("ORDER_STATUS_CHANGED", async (event) => {
       from: EMAIL_SENDER_DEFAULT,
       to: [customer.email],
       subject: "Atualização do status do seu pedido",
-      text: orderStatusChangedCustomerTemplateEmail(
-        previousStatus,
-        newStatus,
-        order,
-        changedBy,
-        customer,
-      ),
+      text: orderStatusChangedCustomerTemplateEmail(newStatus, order, customer),
     },
   });
 });
