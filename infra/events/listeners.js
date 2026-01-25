@@ -5,6 +5,8 @@ import {
   userActivatedTemplateEmail,
 } from "infra/notifications/templates/email/activation-user";
 import {
+  orderApprovedAdminTemplateEmail,
+  orderApprovedCustomerTemplateEmail,
   orderCreatedAdminTemplateEmail,
   orderCreatedCustomerTemplateEmail,
 } from "infra/notifications/templates/email/rentals.templates";
@@ -59,6 +61,35 @@ eventDispatcher.on("ORDER_CREATED", async (event) => {
       to: ["ryan@gwalchmei.com.br"],
       subject: `Novo pedido criado - ID ${order.id}`,
       text: orderCreatedAdminTemplateEmail(order, createdBy),
+    },
+  });
+});
+
+eventDispatcher.on("ORDER_APPROVED", async (event) => {
+  const { order, rental, customer, approved_by } = event.payload;
+
+  sendNotification({
+    channel: "EMAIL",
+    params: {
+      from: EMAIL_SENDER_DEFAULT,
+      to: customer.email,
+      subject: "Seu pedido foi processado e está em análise!",
+      text: orderApprovedCustomerTemplateEmail(rental, customer),
+    },
+  });
+
+  sendNotification({
+    channel: "EMAIL",
+    params: {
+      from: EMAIL_SENDER_DEFAULT,
+      to: ["ryan@gwalchmei.com.br"],
+      subject: `Uma Ordem de Serviço foi aprovada`,
+      text: orderApprovedAdminTemplateEmail(
+        approved_by,
+        order,
+        rental,
+        customer,
+      ),
     },
   });
 });

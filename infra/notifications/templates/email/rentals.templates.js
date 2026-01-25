@@ -31,3 +31,56 @@ Observações: ${order.notes || "Nenhuma"}
 Por favor, revise e processe o pedido conforme necessário.
 `;
 }
+
+export function orderApprovedCustomerTemplateEmail(rental, customer) {
+  return `Olá ${customer.username}, seu pedido foi processado e agora está em análise para aprovação!
+
+Detalhes do Aluguel:
+Id do aluguel: ${rental.id}
+Período: ${new Date(rental.start_date).toLocaleDateString("pt-BR")} - ${new Date(rental.end_date).toLocaleDateString("pt-BR")}
+Local de Funcionamento: ${rental.location_refer}
+https://www.google.com/maps?q=${rental.lat},${rental.lng}
+${
+  rental?.notes
+    ? `
+Observações: ${rental.notes}
+`
+    : ""
+}
+Fique atento ao seu e-mail para mais informações sobre a aprovação do seu pedido.
+Obrigado por escolher nossos serviços!
+
+Atenciosamente,
+Equipe Gwalchmei
+  `;
+}
+
+export function orderApprovedAdminTemplateEmail(
+  approvedBy,
+  order,
+  rental,
+  customer,
+) {
+  return `Uma Ordem de Serviço foi aprovada por ${approvedBy.username} e requer sua atenção.
+
+Um aluguel foi gerado com os seguintes detalhes:
+
+Id do aluguel: ${rental.id}
+Status: ${rental.status}
+
+Cliente: 
+Username: ${customer.username}
+E-mail: ${customer.email}
+Celular: ${customer.phone || "Não informado"}
+
+Detalhes do Pedido:
+Id do pedido: ${order.id}
+Período: ${new Date(rental.start_date).toLocaleDateString("pt-BR")} - ${new Date(rental.end_date).toLocaleDateString("pt-BR")}
+Local de funcionamento: ${rental.location_refer}
+https://www.google.com/maps?q=${rental.lat},${rental.lng}
+
+
+Acesse o painel administrativo para revisar os detalhes do pedido 
+Por favor, analise as informações do pedido e tome as medidas necessárias.
+`;
+}
