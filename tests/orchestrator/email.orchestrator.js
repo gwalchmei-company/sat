@@ -1,5 +1,20 @@
 import { emailHttpUrl } from "./infra.orchestrator";
 
+async function getAllEmails() {
+  const emailListResponse = await fetch(`${emailHttpUrl}/messages`);
+  const emailListBody = await emailListResponse.json();
+
+  if (!emailListBody || emailListBody.length === 0) {
+    return [];
+  }
+
+  for (const emailItem of emailListBody) {
+    emailItem.text = await getTextById(emailItem.id);
+  }
+
+  return emailListBody;
+}
+
 async function getLastEmail() {
   const emailListResponse = await fetch(`${emailHttpUrl}/messages`);
   const emailListBody = await emailListResponse.json();
@@ -9,12 +24,7 @@ async function getLastEmail() {
     return null;
   }
 
-  const emailTextResponse = await fetch(
-    `${emailHttpUrl}/messages/${lastEmailItem.id}.plain`,
-  );
-  const emailTextBody = await emailTextResponse.text();
-
-  lastEmailItem.text = emailTextBody;
+  lastEmailItem.text = await getTextById(lastEmailItem.id);
   return lastEmailItem;
 }
 
@@ -24,9 +34,16 @@ async function deleteAllEmails() {
   });
 }
 
+async function getTextById(id) {
+  const emailTextResponse = await fetch(`${emailHttpUrl}/messages/${id}.plain`);
+  const emailTextBody = await emailTextResponse.text();
+  return emailTextBody;
+}
+
 const orchestrator = {
   getLastEmail,
   deleteAllEmails,
+  getAllEmails,
 };
 
 export default orchestrator;
