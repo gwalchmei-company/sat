@@ -70,26 +70,7 @@ describe("Use case: complete contract workflow", () => {
     expect(emailToAdmin.text === "").toBe(false);
   });
 
-  test("admin approves rental request", async () => {
-    admin = await orchestrator.createAuthenticatedUser("admin");
-
-    const approveResponse = await fetch(
-      `http://localhost:3000/api/v1/customerorder/${customerOrder.id}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${admin.session.token}`,
-        },
-        body: JSON.stringify({ status: "approved" }),
-      },
-    );
-    expect(approveResponse.status).toBe(200);
-    const approvedOrder = await approveResponse.json();
-    expect(approvedOrder.status).toBe("approved");
-  });
-
-  test("admin creates rental from approved customer order", async () => {
+  test("admin approves and create rental from approved customer order", async () => {
     device = await orchestrator.createDevice();
 
     const rentalInput = {
