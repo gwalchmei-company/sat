@@ -71,6 +71,7 @@ describe("Use case: complete contract workflow", () => {
   });
 
   test("admin approves and create rental from approved customer order", async () => {
+    admin = await orchestrator.createAuthenticatedUser("admin");
     device = await orchestrator.createDevice();
 
     const rentalInput = {
@@ -148,6 +149,21 @@ describe("Use case: complete contract workflow", () => {
     expect(reponse.status).toBe(201);
     expect(contract.rental_id).toBe(rental.id);
     expect(contract.status).toBe("draft");
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Contrato criado com sucesso!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+    expect(emailToCustomer.text).toContain(customer.user.username);
   });
 
   test("admin sends contract to customer", async () => {

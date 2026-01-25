@@ -5,6 +5,7 @@ import {
   userActivatedTemplateEmail,
 } from "infra/notifications/templates/email/activation-user";
 import {
+  contractCreatedCustomerTemplateEmail,
   orderApprovedAdminTemplateEmail,
   orderApprovedCustomerTemplateEmail,
   orderCreatedAdminTemplateEmail,
@@ -105,6 +106,19 @@ eventDispatcher.on("ORDER_STATUS_CHANGED", async (event) => {
       to: [customer.email],
       subject: "Atualização do status do seu pedido",
       text: orderStatusChangedCustomerTemplateEmail(newStatus, order, customer),
+    },
+  });
+});
+
+eventDispatcher.on("CONTRACT_CREATED", async (event) => {
+  const { customer } = event.payload;
+  sendNotification({
+    channel: "EMAIL",
+    params: {
+      from: EMAIL_SENDER_DEFAULT,
+      to: customer.email,
+      subject: "Contrato criado com sucesso!",
+      text: contractCreatedCustomerTemplateEmail(customer),
     },
   });
 });

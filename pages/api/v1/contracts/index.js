@@ -3,6 +3,9 @@ import controller from "infra/controller.js";
 import contract from "models/contract";
 import authorization from "models/authorization";
 import { ForbiddenError } from "infra/errors";
+import { createEvent, eventDispatcher } from "infra/events";
+import rental from "models/rental";
+import user from "models/user";
 
 const router = createRouter();
 
@@ -16,6 +19,21 @@ async function postHandler(request, response) {
   const contractInputValues = request.body;
 
   const contractCreated = await contract.create(contractInputValues);
+
+  const rentalDetails = await rental.findOneById(contractCreated.rental_id);
+  const customerDetails = await user.findOneById(rentalDetails.customer_id);
+
+  await eventDispatcher.dispatch(
+    createEvent({
+      type: "CONTRACT_CREATED",
+      entity: "CONTRACT",
+      entityId: contractCreated.id,
+      payload: {
+        customer: customerDetails,
+      },
+    }),
+  );
+
   return response.status(201).json(contractCreated);
 }
 

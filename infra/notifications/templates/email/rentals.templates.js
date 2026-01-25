@@ -144,3 +144,17 @@ Equipe Gwalchmei
       `;
   }
 }
+
+export function contractCreatedCustomerTemplateEmail(customer) {
+  return `Olá ${customer.username}, 
+Temos boas noticias!
+  
+Um contrato está sendo preparado e em breve estará disponível para assinatura.
+
+Fique atento ao seu e-mail para mais informações. 
+Obrigado por escolher nossos serviços!
+
+Atenciosamente,
+Equipe Gwalchmei
+`;
+}
