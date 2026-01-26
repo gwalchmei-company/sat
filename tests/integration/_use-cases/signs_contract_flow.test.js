@@ -185,6 +185,21 @@ describe("Use case: complete contract workflow", () => {
     const sentContract = await sendResponse.json();
 
     expect(sentContract.status).toBe("sent");
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Contrato disponível para assinatura!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+    expect(emailToCustomer.text).toContain(customer.user.username);
   });
 
   test("customer views received contract", async () => {

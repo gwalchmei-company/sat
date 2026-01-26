@@ -6,12 +6,15 @@ import {
 } from "infra/notifications/templates/email/activation-user";
 import {
   contractCreatedCustomerTemplateEmail,
+  contractSentCustomerTemplateEmail,
   orderApprovedAdminTemplateEmail,
   orderApprovedCustomerTemplateEmail,
   orderCreatedAdminTemplateEmail,
   orderCreatedCustomerTemplateEmail,
   orderStatusChangedCustomerTemplateEmail,
 } from "infra/notifications/templates/email/rentals.templates";
+import user from "models/user";
+import rental from "models/rental";
 
 const EMAIL_SENDER_DEFAULT = "Gwalchmei <contato@gwalchmei.com.br>";
 
@@ -121,4 +124,22 @@ eventDispatcher.on("CONTRACT_CREATED", async (event) => {
       text: contractCreatedCustomerTemplateEmail(customer),
     },
   });
+});
+
+eventDispatcher.on("CONTRACT_UPDATED", async (event) => {
+  const { contract } = event.payload;
+
+  const rentalObject = await rental.findOneById(contract.rental_id);
+  const customer = await user.findOneById(rentalObject.customer_id);
+  if (contract.status == "sent") {
+    sendNotification({
+      channel: "EMAIL",
+      params: {
+        from: EMAIL_SENDER_DEFAULT,
+        to: customer.email,
+        subject: "Contrato disponível para assinatura!",
+        text: contractSentCustomerTemplateEmail(customer),
+      },
+    });
+  }
 });

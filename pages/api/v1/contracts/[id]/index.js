@@ -3,6 +3,7 @@ import controller from "infra/controller.js";
 import contract from "models/contract";
 import authorization from "models/authorization";
 import { ForbiddenError } from "infra/errors";
+import { createEvent, eventDispatcher } from "infra/events";
 
 const router = createRouter();
 
@@ -47,6 +48,17 @@ async function patchHandler(request, response) {
   const contractData = request.body;
 
   const contractUpdated = await contract.update(contractId, contractData);
+
+  await eventDispatcher.dispatch(
+    createEvent({
+      type: "CONTRACT_UPDATED",
+      entity: "CONTRACT",
+      entityId: contractUpdated.id,
+      payload: {
+        contract: contractUpdated,
+      },
+    }),
+  );
 
   return response.status(200).json(contractUpdated);
 }

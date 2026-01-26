@@ -1,3 +1,5 @@
+import contract from "models/contract";
+
 export function orderCreatedCustomerTemplateEmail(order, createdBy) {
   return `Olá ${createdBy.username}, 
   seu pedido de ID ${order.id} foi criado com sucesso.
@@ -153,6 +155,28 @@ Um contrato está sendo preparado e em breve estará disponível para assinatura
 
 Fique atento ao seu e-mail para mais informações. 
 Obrigado por escolher nossos serviços!
+
+Atenciosamente,
+Equipe Gwalchmei
+`;
+}
+
+export function contractSentCustomerTemplateEmail(customer) {
+  return `Olá ${customer.username}, 
+Informamos que o contrato já está pronto para assinatura. 
+
+Instruções de assinatura:
+- Confira seu portal do cliente para acessar o contrato;
+- Confira atentamente todas as cláusulas do contrato;
+- Realize a assinatura conforme as instruções da plataforma.
+
+Prazo para assinatura:
+Solicitamos que a assinatura seja realizada até ${new Date(Date.now() + contract.EXPIRATION_IN_MILLISECONDS).toLocaleDateString("pt-BR")}.
+  
+Caso o contrato não seja assinado dentro do prazo informado, o acordo poderá ser considerado inválido, ficando sujeito a cancelamento ou necessidade de renegociação dos termos.
+
+Se tiver alguma dúvida ou precisar de assistência, 
+não hesite em entrar em contato conosco.
 
 Atenciosamente,
 Equipe Gwalchmei
