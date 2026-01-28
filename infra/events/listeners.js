@@ -5,6 +5,8 @@ import {
   userActivatedTemplateEmail,
 } from "infra/notifications/templates/email/activation-user";
 import {
+  contractCanceledAdminTemplateEmail,
+  contractCanceledCustomerTemplateEmail,
   contractCreatedCustomerTemplateEmail,
   contractSentCustomerTemplateEmail,
   contractSignedAdminTemplateEmail,
@@ -181,5 +183,36 @@ eventDispatcher.on("CONTRACT_SIGNED", async (event) => {
         ),
       },
     });
+  }
+});
+
+eventDispatcher.on("CONTRACT_CANCELED", async (event) => {
+  const { canceledContract, canceledBy } = event.payload;
+
+  const rentalObject = await rental.findOneById(canceledContract.rental_id);
+  const customer = await user.findOneById(rentalObject.customer_id);
+
+  if (canceledContract.status == "canceled") {
+    sendNotification({
+      channel: "EMAIL",
+      params: {
+        from: EMAIL_SENDER_DEFAULT,
+        to: customer.email,
+        subject: "Seu contrato foi cancelado!",
+        text: contractCanceledCustomerTemplateEmail(customer, canceledContract),
+      },
+    });
+
+    if (customer.username === canceledBy.username) {
+      sendNotification({
+        channel: "EMAIL",
+        params: {
+          from: EMAIL_SENDER_DEFAULT,
+          to: ["ryan@gwalchmei.com.br"],
+          subject: `Um cliente cancelou um contrato!`,
+          text: contractCanceledAdminTemplateEmail(customer, canceledContract),
+        },
+      });
+    }
   }
 });

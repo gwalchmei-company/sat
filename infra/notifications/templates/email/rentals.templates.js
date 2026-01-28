@@ -238,3 +238,29 @@ https://www.google.com/maps?q=${rentalObject.lat},${rentalObject.lng}
 Por favor, atualize os registros e prossiga com os próximos passos conforme necessário.
 `;
 }
+
+export function contractCanceledCustomerTemplateEmail(customer, contract) {
+  return `Olá ${customer.username}, 
+Informamos que o contrato nº ${contract.contract_number} foi cancelado.
+
+Se você tiver alguma dúvida ou precisar de mais informações, 
+não hesite em entrar em contato conosco.
+
+Atenciosamente,
+Equipe Gwalchmei
+      `;
+}
+
+export function contractCanceledAdminTemplateEmail(customer, contract) {
+  return `Informamos que um contrato foi cancelado.
+
+Cliente:
+Username: ${customer.username}
+Documento / ID: ${customer.cpf}
+
+Contrato nº: ${contract.contract_number}
+O contrato de ID ${contract.id} foi cancelado.
+
+Por favor, atualize os registros e prossiga com os próximos passos conforme necessário.
+`;
+}
