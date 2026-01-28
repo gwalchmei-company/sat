@@ -182,3 +182,59 @@ Atenciosamente,
 Equipe Gwalchmei
 `;
 }
+
+export function contractSignedCustomerTemplateEmail(
+  customer,
+  rentalObject,
+  contract,
+) {
+  return `Olá ${customer.username}, 
+Confirmamos que o contrato foi assinado com sucesso.
+O contrato encontra-se ativo a partir desta data.
+
+Detalhes do Serviço:
+Contrato nº: ${contract.contract_number}
+Data de Assinatura: ${new Date(contract.signed_at).toLocaleDateString("pt-BR")}
+
+Descrição: Prestação de Serviços de Informática
+Período: ${new Date(rentalObject.start_date).toLocaleDateString("pt-BR")} - ${new Date(rentalObject.end_date).toLocaleDateString("pt-BR")}
+Local de Funcionamento: ${rentalObject.location_refer}
+https://www.google.com/maps?q=${rentalObject.lat},${rentalObject.lng}
+
+As informações para o pagamento estão disponíveis no seu portal do cliente.
+
+Agradecemos por confiar em nossos serviços. 
+Estamos à disposição para qualquer dúvida ou assistência que você possa precisar.
+
+Atenciosamente,
+Equipe Gwalchmei
+`;
+}
+
+export function contractSignedAdminTemplateEmail(
+  customer,
+  rentalObject,
+  contract,
+) {
+  return `Informamos que um contrato foi assinado e se encontra ativo.
+
+Cliente:
+Username: ${customer.username}
+Documento / ID: ${customer.cpf}
+
+Contrato nº: ${contract.contract_number}
+O contrato de ID ${contract.id} foi assinado com sucesso.
+
+Detalhes do Contrato:
+ID do Contrato: ${contract.id}
+ID do Cliente: ${customer.id}
+Data de Assinatura: ${new Date(contract.signed_at).toLocaleDateString("pt-BR")}
+Descrição: Prestação de Serviços de Informática
+Período: ${new Date(rentalObject.start_date).toLocaleDateString("pt-BR")} - ${new Date(rentalObject.end_date).toLocaleDateString("pt-BR")}
+Local de Funcionamento: ${rentalObject.location_refer}
+https://www.google.com/maps?q=${rentalObject.lat},${rentalObject.lng}
+
+
+Por favor, atualize os registros e prossiga com os próximos passos conforme necessário.
+`;
+}

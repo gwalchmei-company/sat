@@ -7,6 +7,8 @@ import {
 import {
   contractCreatedCustomerTemplateEmail,
   contractSentCustomerTemplateEmail,
+  contractSignedAdminTemplateEmail,
+  contractSignedCustomerTemplateEmail,
   orderApprovedAdminTemplateEmail,
   orderApprovedCustomerTemplateEmail,
   orderCreatedAdminTemplateEmail,
@@ -139,6 +141,44 @@ eventDispatcher.on("CONTRACT_UPDATED", async (event) => {
         to: customer.email,
         subject: "Contrato disponível para assinatura!",
         text: contractSentCustomerTemplateEmail(customer),
+      },
+    });
+  }
+});
+
+eventDispatcher.on("CONTRACT_SIGNED", async (event) => {
+  const { signedContract } = event.payload;
+  console.log(signedContract);
+
+  const rentalObject = await rental.findOneById(signedContract.rental_id);
+  const customer = await user.findOneById(rentalObject.customer_id);
+
+  if (signedContract.status == "signed") {
+    sendNotification({
+      channel: "EMAIL",
+      params: {
+        from: EMAIL_SENDER_DEFAULT,
+        to: customer.email,
+        subject: "Contrato assinado com sucesso!",
+        text: contractSignedCustomerTemplateEmail(
+          customer,
+          rentalObject,
+          signedContract,
+        ),
+      },
+    });
+
+    sendNotification({
+      channel: "EMAIL",
+      params: {
+        from: EMAIL_SENDER_DEFAULT,
+        to: ["ryan@gwalchmei.com.br"],
+        subject: "Um contrato foi assinado!",
+        text: contractSignedAdminTemplateEmail(
+          customer,
+          rentalObject,
+          signedContract,
+        ),
       },
     });
   }

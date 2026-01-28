@@ -3,6 +3,7 @@ import controller from "infra/controller.js";
 import contract from "models/contract";
 import authorization from "models/authorization";
 import { ForbiddenError } from "infra/errors";
+import { createEvent, eventDispatcher } from "infra/events";
 
 const router = createRouter();
 
@@ -31,6 +32,17 @@ async function postHandler(request, response) {
   }
 
   const signedContract = await contract.sign(contractId, userLogged.id);
+
+  await eventDispatcher.dispatch(
+    createEvent({
+      type: "CONTRACT_SIGNED",
+      entity: "CONTRACT",
+      entityId: signedContract.id,
+      payload: {
+        signedContract,
+      },
+    }),
+  );
 
   return response.status(200).json(signedContract);
 }

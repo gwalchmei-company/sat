@@ -277,6 +277,31 @@ describe("Use case: complete contract workflow", () => {
     );
 
     expect(resignResponse.status).toBe(400);
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Contrato assinado com sucesso!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+    expect(emailToCustomer.text).toContain(customer.user.username);
+
+    const emailToAdmin = allEmails.find(
+      (email) =>
+        email.recipients.includes("<ryan@gwalchmei.com.br>") &&
+        email.subject == "Um contrato foi assinado!",
+    );
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
+    expect(emailToAdmin.text).toContain(customer.user.username);
   });
 
   test("admin views signed contract", async () => {
