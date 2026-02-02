@@ -1,4 +1,7 @@
+import { formatPrice } from "helpers/price";
 import contract from "models/contract";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export function orderCreatedCustomerTemplateEmail(order, createdBy) {
   return `Olá ${createdBy.username}, 
@@ -262,5 +265,69 @@ Contrato nº: ${contract.contract_number}
 O contrato de ID ${contract.id} foi cancelado.
 
 Por favor, atualize os registros e prossiga com os próximos passos conforme necessário.
+`;
+}
+
+export function financialIncomeCreatedTemplateEmailToCustomer(
+  financialIncome,
+  customer,
+) {
+  return `Olá ${customer.username}, 
+Confirmamos o registro do seu pagamento com sucesso!
+  
+Detalhes da Receita Financeira:
+ID: ${financialIncome.id}
+Descrição: ${financialIncome.description}
+Valor: ${formatPrice(financialIncome.amount_in_cents)}
+Data de Recebimento: ${format(
+    new Date(financialIncome.received_at),
+    "dd/MM/yyyy 'às' HH:mm",
+    {
+      locale: ptBR,
+    },
+  )}
+
+Obrigado por utilizar nossos serviços!
+
+Atenciosamente,
+Equipe Gwalchmei
+`;
+}
+
+export function financialIncomeCreatedTemplateEmailToAdmin(
+  customer,
+  financialIncome,
+  performedBy,
+) {
+  return `Um novo pagamento foi registrado.
+
+Cliente:
+Username: ${customer.username}
+E-mail: ${customer.email}
+ID: ${customer.id}
+
+Detalhes da Receita Financeira:
+Descrição: ${financialIncome.description}
+Valor: ${formatPrice(financialIncome.amount_in_cents)}
+Data de Recebimento: ${format(
+    new Date(financialIncome.received_at),
+    "dd/MM/yyyy 'às' HH:mm",
+    {
+      locale: ptBR,
+    },
+  )}
+
+
+Detalhes para referência:
+ID da Receita: ${financialIncome.id}
+ID do Cliente: ${customer.id}
+ID do Aluguel: ${financialIncome.rental_id}
+
+Criado por:
+Username: ${performedBy.username}
+E-mail: ${performedBy.email}
+ID: ${performedBy.id}
+
+Por favor, revise as informações conforme necessário.
 `;
 }

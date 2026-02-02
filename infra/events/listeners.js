@@ -11,6 +11,8 @@ import {
   contractSentCustomerTemplateEmail,
   contractSignedAdminTemplateEmail,
   contractSignedCustomerTemplateEmail,
+  financialIncomeCreatedTemplateEmailToAdmin,
+  financialIncomeCreatedTemplateEmailToCustomer,
   orderApprovedAdminTemplateEmail,
   orderApprovedCustomerTemplateEmail,
   orderCreatedAdminTemplateEmail,
@@ -215,4 +217,38 @@ eventDispatcher.on("CONTRACT_CANCELED", async (event) => {
       });
     }
   }
+});
+
+eventDispatcher.on("FINANCIALINCOME_CREATED", async (event) => {
+  const { financialIncome, performedBy } = event.payload;
+
+  const rentalObject = await rental.findOneById(financialIncome.rental_id);
+  const customer = await user.findOneById(rentalObject.customer_id);
+
+  sendNotification({
+    channel: "EMAIL",
+    params: {
+      from: EMAIL_SENDER_DEFAULT,
+      to: [customer.email],
+      subject: "Pagamento recebido com sucesso!",
+      text: financialIncomeCreatedTemplateEmailToCustomer(
+        financialIncome,
+        customer,
+      ),
+    },
+  });
+
+  sendNotification({
+    channel: "EMAIL",
+    params: {
+      from: EMAIL_SENDER_DEFAULT,
+      to: ["ryan@gwalchmei.com.br"],
+      subject: "Pagamento recebido",
+      text: financialIncomeCreatedTemplateEmailToAdmin(
+        customer,
+        financialIncome,
+        performedBy,
+      ),
+    },
+  });
 });

@@ -5,6 +5,7 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices();
   await orchestrator.clearDatabase();
   await orchestrator.runPendingMigrations();
+  await orchestrator.deleteAllEmails();
 });
 
 describe("POST /api/v1/financialincome", () => {
@@ -82,7 +83,11 @@ describe("POST /api/v1/financialincome", () => {
   describe("Admin user", () => {
     test("create financial income when user is admin", async () => {
       const { session } = await orchestrator.createAuthenticatedUser("admin");
-      const rental = await orchestrator.createRental();
+      const { user: customerUser } =
+        await orchestrator.createAuthenticatedUser("customer");
+      const rental = await orchestrator.createRental({
+        customer_id: customerUser.id,
+      });
 
       const financialIncomeInput = {
         rental_id: rental.id,
@@ -123,6 +128,30 @@ describe("POST /api/v1/financialincome", () => {
         updated_at: expect.any(String),
         deleted_at: null,
       });
+
+      // eslint-disable-next-line no-undef
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const allEmails = await orchestrator.getAllEmails();
+
+      const emailToCustomer = allEmails.find(
+        (email) =>
+          email.recipients.includes(`<${customerUser.email}>`) &&
+          email.subject == "Pagamento recebido com sucesso!",
+      );
+
+      expect(emailToCustomer).toBeDefined();
+      expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+      expect(emailToCustomer.text === "").toBe(false);
+
+      const emailToAdmin = allEmails.find(
+        (email) =>
+          email.recipients.includes(`<ryan@gwalchmei.com.br>`) &&
+          email.subject == "Pagamento recebido",
+      );
+
+      expect(emailToAdmin).toBeDefined();
+      expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+      expect(emailToAdmin.text === "").toBe(false);
     });
 
     test("fail when rental_id is missing", async () => {

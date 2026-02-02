@@ -3,6 +3,7 @@ import controller from "infra/controller.js";
 import financialIncome from "models/financial-income";
 import { ForbiddenError } from "infra/errors";
 import authorization from "models/authorization";
+import { createEvent, eventDispatcher } from "infra/events";
 
 const router = createRouter();
 
@@ -17,6 +18,18 @@ async function postHandler(request, response) {
 
   const financialIncomeCreated = await financialIncome.create(
     financialIncomeInputValues,
+  );
+
+  await eventDispatcher.dispatch(
+    createEvent({
+      type: "FINANCIALINCOME_CREATED",
+      entity: "FINANCIALINCOME",
+      entityId: financialIncomeCreated.id,
+      payload: {
+        financialIncome: financialIncomeCreated,
+        performedBy: request.context.user || null,
+      },
+    }),
   );
 
   return response.status(201).json(financialIncomeCreated);
