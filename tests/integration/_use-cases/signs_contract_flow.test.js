@@ -18,6 +18,9 @@ describe("Use case: complete contract workflow", () => {
   let rental;
   let contract;
 
+  let rentalFinancials;
+  let financialIncome;
+
   test("customer make a rental request", async () => {
     customer = await orchestrator.createAuthenticatedUser("customer");
 
@@ -146,7 +149,7 @@ describe("Use case: complete contract workflow", () => {
       },
     );
 
-    const rentalFinancials = await rentalFinancialsResponse.json();
+    rentalFinancials = await rentalFinancialsResponse.json();
     expect(rentalFinancialsResponse.status).toBe(201);
     expect(rentalFinancials.rental_id).toBe(rental.id);
     expect(rentalFinancials.daily_price_in_cents).toBe(50000);
@@ -360,7 +363,7 @@ describe("Use case: complete contract workflow", () => {
   test("customer pays invoice", async () => {
     const input = {
       rental_id: rental.id,
-      amount_in_cents: 350000,
+      amount_in_cents: 349950,
       payment_method: "PIX",
       received_at: "2026-02-01T10:30:00.000Z",
       reference_date: "2026-02-01T00:00:00.000Z",
@@ -383,10 +386,10 @@ describe("Use case: complete contract workflow", () => {
     );
 
     expect(paymentResponse.status).toBe(201);
-    const paymentResult = await paymentResponse.json();
+    financialIncome = await paymentResponse.json();
 
-    expect(paymentResult.rental_id).toBe(rental.id);
-    expect(paymentResult.received_at).toBeDefined();
+    expect(financialIncome.rental_id).toBe(rental.id);
+    expect(financialIncome.received_at).toBeDefined();
 
     // eslint-disable-next-line no-undef
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -411,6 +414,15 @@ describe("Use case: complete contract workflow", () => {
     expect(emailToAdmin).toBeDefined();
     expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
     expect(emailToAdmin.text === "").toBe(false);
+  });
+
+  test("checks if the customer has paid the invoice.", async () => {
+    expect(financialIncome).toBeDefined();
+    expect(rentalFinancials).toBeDefined();
+
+    expect(financialIncome.amount_in_cents).toBe(
+      rentalFinancials.final_price_in_cents,
+    );
   });
 
   test("Operator view signed contract", async () => {
