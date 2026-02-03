@@ -367,3 +367,56 @@ Atenciosamente,
 Equipe Gwalchmei
   `;
 }
+
+export function rentalUpdatedAdminTemplateEmail(
+  rental,
+  changes,
+  customer,
+  updatedBy,
+) {
+  switch (changes.status) {
+    case "active":
+      return rentalUpdatedStatusToActiveAdminTemplateEmail(
+        rental,
+        customer,
+        updatedBy,
+      );
+
+    default:
+      break;
+  }
+}
+
+export function rentalUpdatedStatusToActiveAdminTemplateEmail(
+  rental,
+  customer,
+  updatedBy,
+) {
+  return `Informamos que um aluguel foi iniciado.
+
+Cliente:
+Username: ${customer.username}
+E-mail: ${customer.email}
+ID: ${customer.id}
+
+Detalhes do Aluguel:
+Id do aluguel: ${rental.id}
+Período: ${new Date(rental.start_date).toLocaleDateString("pt-BR")} - ${new Date(rental.end_date).toLocaleDateString("pt-BR")}
+Local de Funcionamento: ${rental.location_refer}
+https://www.google.com/maps?q=${rental.lat},${rental.lng}
+${
+  rental?.notes
+    ? `
+Observações: ${rental.notes}
+`
+    : ""
+}
+
+Atualizado por:
+Username: ${updatedBy.username}
+E-mail: ${updatedBy.email}
+ID: ${updatedBy.id}
+
+Por favor, atualize os registros e prossiga com os próximos passos conforme necessário.
+`;
+}

@@ -18,6 +18,7 @@ import {
   orderCreatedAdminTemplateEmail,
   orderCreatedCustomerTemplateEmail,
   orderStatusChangedCustomerTemplateEmail,
+  rentalUpdatedAdminTemplateEmail,
   rentalUpdatedCustomerTemplateEmail,
 } from "infra/notifications/templates/email/rentals.templates";
 import user from "models/user";
@@ -255,7 +256,7 @@ eventDispatcher.on("FINANCIALINCOME_CREATED", async (event) => {
 });
 
 eventDispatcher.on("RENTAL_UPDATED", async (event) => {
-  const { changes } = event.payload;
+  const { changes, updatedBy } = event.payload;
   const rentalUpdated = await rental.findOneById(event.entityId);
   const customer = await user.findOneById(rentalUpdated.customer_id);
 
@@ -270,6 +271,21 @@ eventDispatcher.on("RENTAL_UPDATED", async (event) => {
           rentalUpdated,
           changes,
           customer,
+        ),
+      },
+    });
+
+    sendNotification({
+      channel: "EMAIL",
+      params: {
+        from: EMAIL_SENDER_DEFAULT,
+        to: ["ryan@gwalchmei.com.br"],
+        subject: "Um aluguel foi iniciado!",
+        text: rentalUpdatedAdminTemplateEmail(
+          rentalUpdated,
+          changes,
+          customer,
+          updatedBy,
         ),
       },
     });

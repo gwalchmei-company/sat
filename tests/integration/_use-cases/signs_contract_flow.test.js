@@ -476,6 +476,16 @@ describe("Use case: complete contract workflow", () => {
     expect(emailToCustomer).toBeDefined();
     expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
     expect(emailToCustomer.text === "").toBe(false);
+
+    const emailToAdmin = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<ryan@gwalchmei.com.br>`) &&
+        email.subject == "Um aluguel foi iniciado!",
+    );
+
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
   });
 
   test("Operator view rental active", async () => {

@@ -54,7 +54,7 @@ async function patchHandler(request, response) {
       entity: "RENTAL",
       entityId: rentalId,
       payload: {
-        updatedBy: userLogged.id,
+        updatedBy: userLogged,
         changes: valuesFiltered,
       },
     }),
