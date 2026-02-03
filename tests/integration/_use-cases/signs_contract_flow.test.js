@@ -421,7 +421,7 @@ describe("Use case: complete contract workflow", () => {
     expect(rentalFinancials).toBeDefined();
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/rentals/${rental.id}/incomes`,
+      `http://localhost:3000/api/v1/rentals/${rental.id}/payment-status`,
       {
         method: "GET",
         headers: {
@@ -432,13 +432,21 @@ describe("Use case: complete contract workflow", () => {
     );
 
     expect(response.status).toBe(200);
-    const responseBody = await response.json();
-    const sum_amounts = responseBody.reduce(
-      (sum, income) => sum + income.amount_in_cents,
-      0,
-    );
-    expect(sum_amounts).toBe(rentalFinancials.final_price_in_cents);
+    const paymentStatus = await response.json();
+    expect(paymentStatus).toEqual({
+      final_price_in_cents: rentalFinancials.final_price_in_cents,
+      total_received_in_cents: rentalFinancials.final_price_in_cents,
+      remaining_in_cents: 0,
+      is_paid: true,
+      percentage_paid: 100,
+      resume: {
+        is_partially_paid: false,
+        noPaymentsReceived: false,
+        is_overpaid: false,
+      },
+    });
   });
+
   test("Operator view rental pending", async () => {
     const operator = await orchestrator.createAuthenticatedUser("operator");
 
