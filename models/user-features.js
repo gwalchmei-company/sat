@@ -46,6 +46,7 @@ const availableFeatures = new Set([
   "read:rentals:self",
   "read:rentals:others",
   "update:rentals",
+  "update:rentals:status",
   "delete:rentals",
 
   // RENTAL FINANCIALS

@@ -124,6 +124,17 @@ function filterInput(user, feature, input, target) {
       "lng",
     ];
 
+    if (input.status && !can(user, "update:rentals:status")) {
+      if (!can(user, "update:rentals")) {
+        throw new ForbiddenError({
+          message:
+            "Você não possui permissão para atualizar o status do aluguel.",
+          action:
+            'Remova o campo "status" ou solicite a feature "update:rentals:status".',
+        });
+      }
+    }
+
     filteredInputValues = {};
     for (const field of allowedFields) {
       if (field in input) {
@@ -483,6 +494,8 @@ const featuresRoles = {
 
     "read:rentals",
     "read:rentals:others",
+    "update:rentals",
+    "update:rentals:status",
 
     "create:rentalfiles",
     "read:rentalfiles",

@@ -420,9 +420,31 @@ describe("Use case: complete contract workflow", () => {
     expect(financialIncome).toBeDefined();
     expect(rentalFinancials).toBeDefined();
 
-    expect(financialIncome.amount_in_cents).toBe(
-      rentalFinancials.final_price_in_cents,
+    const response = await fetch(
+      `http://localhost:3000/api/v1/rentals/${rental.id}/payment-status`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admin.session.token}`,
+        },
+      },
     );
+
+    expect(response.status).toBe(200);
+    const paymentStatus = await response.json();
+    expect(paymentStatus).toEqual({
+      final_price_in_cents: rentalFinancials.final_price_in_cents,
+      total_received_in_cents: rentalFinancials.final_price_in_cents,
+      remaining_in_cents: 0,
+      is_paid: true,
+      percentage_paid: 100,
+      resume: {
+        is_partially_paid: false,
+        noPaymentsReceived: false,
+        is_overpaid: false,
+      },
+    });
   });
 
   test("Operator view rental pending", async () => {
@@ -444,14 +466,16 @@ describe("Use case: complete contract workflow", () => {
     expect(rentalsPending.status).toBe("pending");
   });
 
-  test("Admin updates rental status to active", async () => {
+  test("Operator updates rental status to active", async () => {
+    const operator = await orchestrator.createAuthenticatedUser("operator");
+
     const response = await fetch(
       `http://localhost:3000/api/v1/rentals/${rental.id}`,
       {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `session_id=${admin.session.token}`,
+          Cookie: `session_id=${operator.session.token}`,
         },
         body: JSON.stringify({
           status: "active",
@@ -459,8 +483,9 @@ describe("Use case: complete contract workflow", () => {
       },
     );
 
-    expect(response.status).toBe(200);
     const updatedRental = await response.json();
+
+    expect(response.status).toBe(200);
     expect(updatedRental.status).toBe("active");
 
     // eslint-disable-next-line no-undef

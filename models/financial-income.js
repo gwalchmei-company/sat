@@ -74,6 +74,42 @@ async function listByCustomerId(customerId) {
   }
 }
 
+async function listByRentalId(rentalId) {
+  const financialIncomeList = await runSelectQuery(rentalId);
+  return financialIncomeList;
+
+  async function runSelectQuery(rentalId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          financial_income.*,
+          rentals.start_date,
+          rentals.end_date,
+          rentals.status AS rental_status,
+          devices.serial_number,
+          devices.model AS device_model,
+          users.username,
+          users.email,
+          users.cpf
+        FROM
+          financial_income
+          INNER JOIN rentals ON rentals.id = financial_income.rental_id
+          INNER JOIN devices ON devices.id = rentals.device_id
+          INNER JOIN users ON users.id = rentals.customer_id
+        WHERE
+          financial_income.rental_id = $1
+        AND
+          financial_income.deleted_at IS NULL
+        ORDER BY
+          financial_income.received_at DESC
+        ;`,
+      values: [rentalId],
+    });
+
+    return results.rows;
+  }
+}
+
 async function findOneById(id) {
   if (!isValidUuid(id)) {
     throw new ValidationError({
@@ -544,6 +580,7 @@ async function Delete(id) {
 export default Object.freeze({
   listAll,
   listByCustomerId,
+  listByRentalId,
   findOneById,
   create,
   update,

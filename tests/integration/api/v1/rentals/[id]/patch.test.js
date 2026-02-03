@@ -502,8 +502,36 @@ describe("PATCH /api/v1/rentals/[id]", () => {
     });
   });
 
+  describe("Manager user", () => {
+    test("allow access when user is manager", async () => {
+      const { session } = await orchestrator.createAuthenticatedUser("manager");
+      const rental = await orchestrator.createRental();
+
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rentals/${rental.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${session.token}`,
+          },
+          body: JSON.stringify({
+            status: "active",
+          }),
+        },
+      );
+
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(responseBody).toMatchObject({
+        id: rental.id,
+        status: "active",
+      });
+    });
+  });
+
   describe("Operator user", () => {
-    test("deny access when user is operator", async () => {
+    test("allow access when user is operator", async () => {
       const { session } =
         await orchestrator.createAuthenticatedUser("operator");
       const rental = await orchestrator.createRental();
@@ -522,13 +550,11 @@ describe("PATCH /api/v1/rentals/[id]", () => {
         },
       );
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(200);
       const responseBody = await response.json();
-      expect(responseBody).toEqual({
-        name: "ForbiddenError",
-        message: "Você não possui permissão para executar essa ação",
-        action: 'Verifique se seu usuário possui a feature "update:rentals".',
-        status_code: 403,
+      expect(responseBody).toMatchObject({
+        id: rental.id,
+        status: "active",
       });
     });
   });
