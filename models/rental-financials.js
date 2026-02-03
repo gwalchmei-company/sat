@@ -2,6 +2,7 @@ import database from "infra/database";
 import { ValidationError } from "infra/errors";
 import { validate as isValidUuid } from "uuid";
 import rental from "models/rental";
+import financialIncome from "models/financial-income";
 
 async function listAll() {
   const rentalFinancialsList = await runSelectQuery();
@@ -118,6 +119,37 @@ async function findOneById(id) {
         action: "Verifique se o id está digitado corretamente.",
       });
     }
+
+    return results.rows[0];
+  }
+}
+async function findOneByRentalId(rentalId) {
+  if (!isValidUuid(rentalId)) {
+    throw new ValidationError({
+      message: "O id do aluguel não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const rentalFinancialFound = await runSelectQuery(rentalId);
+  return rentalFinancialFound;
+
+  async function runSelectQuery(rentalId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          rental_financials
+        WHERE
+          rental_id = $1
+        AND
+          deleted_at IS NULL
+        LIMIT
+          1
+        ;`,
+      values: [rentalId],
+    });
 
     return results.rows[0];
   }
@@ -436,6 +468,41 @@ async function Delete(id) {
   }
 }
 
+async function checkPaymentStatus(rentalId) {
+  if (!isValidUuid(rentalId)) {
+    throw new ValidationError({
+      message: "O id do aluguel não é válido.",
+      action: "Informe um id válido e tente novamente.",
+    });
+  }
+
+  const rentalFinancials = await findOneByRentalId(rentalId);
+  const financialIncomes = await financialIncome.listByRentalId(rentalId);
+
+  const totalIncome = financialIncomes.reduce((sum, income) => {
+    return sum + income.amount_in_cents;
+  }, 0);
+
+  return {
+    final_price_in_cents: rentalFinancials.final_price_in_cents,
+    total_received_in_cents: totalIncome,
+    remaining_in_cents: Math.max(
+      0,
+      rentalFinancials.final_price_in_cents - totalIncome,
+    ),
+    is_paid: totalIncome >= rentalFinancials.final_price_in_cents,
+    percentage_paid: Math.round(
+      (totalIncome / rentalFinancials.final_price_in_cents) * 100,
+    ),
+    resume: {
+      is_partially_paid:
+        totalIncome > 0 && totalIncome < rentalFinancials.final_price_in_cents,
+      noPaymentsReceived: totalIncome === 0,
+      is_overpaid: totalIncome > rentalFinancials.final_price_in_cents,
+    },
+  };
+}
+
 export default Object.freeze({
   listAll,
   listByCustomerId,
@@ -443,4 +510,5 @@ export default Object.freeze({
   create,
   update,
   Delete,
+  checkPaymentStatus,
 });
