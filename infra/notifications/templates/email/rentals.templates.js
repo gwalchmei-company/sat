@@ -331,3 +331,39 @@ ID: ${performedBy.id}
 Por favor, revise as informações conforme necessário.
 `;
 }
+
+export function rentalUpdatedCustomerTemplateEmail(rental, changes, customer) {
+  switch (changes.status) {
+    case "active":
+      return rentalUpdatedStatusToActiveCustomerTemplateEmail(rental, customer);
+
+    default:
+      break;
+  }
+}
+
+export function rentalUpdatedStatusToActiveCustomerTemplateEmail(
+  rental,
+  customer,
+) {
+  return `Olá ${customer.username}, seu aluguel foi iniciado com sucesso!
+
+Detalhes do Aluguel:
+Id do aluguel: ${rental.id}
+Período: ${new Date(rental.start_date).toLocaleDateString("pt-BR")} - ${new Date(rental.end_date).toLocaleDateString("pt-BR")}
+Local de Funcionamento: ${rental.location_refer}
+https://www.google.com/maps?q=${rental.lat},${rental.lng}
+${
+  rental?.notes
+    ? `
+Observações: ${rental.notes}
+`
+    : ""
+}
+
+Agradecemos por escolher nossos serviços!
+
+Atenciosamente,
+Equipe Gwalchmei
+  `;
+}

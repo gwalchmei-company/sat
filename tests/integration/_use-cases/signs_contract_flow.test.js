@@ -425,11 +425,11 @@ describe("Use case: complete contract workflow", () => {
     );
   });
 
-  test("Operator view signed contract", async () => {
+  test("Operator view rental pending", async () => {
     const operator = await orchestrator.createAuthenticatedUser("operator");
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/contracts/${contract.id}`,
+      `http://localhost:3000/api/v1/rentals/${rental.id}`,
       {
         method: "GET",
         headers: {
@@ -440,9 +440,60 @@ describe("Use case: complete contract workflow", () => {
     );
 
     expect(response.status).toBe(200);
-    const signedContract = await response.json();
-    expect(signedContract.status).toBe("signed");
-    expect(signedContract.signed_by).toBe(customer.user.id);
-    expect(signedContract.signed_at).not.toBeNull();
+    const rentalsPending = await response.json();
+    expect(rentalsPending.status).toBe("pending");
+  });
+
+  test("Admin updates rental status to active", async () => {
+    const response = await fetch(
+      `http://localhost:3000/api/v1/rentals/${rental.id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admin.session.token}`,
+        },
+        body: JSON.stringify({
+          status: "active",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const updatedRental = await response.json();
+    expect(updatedRental.status).toBe("active");
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Seu aluguel foi iniciado!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+  });
+
+  test("Operator view rental active", async () => {
+    const operator = await orchestrator.createAuthenticatedUser("operator");
+
+    const response = await fetch(
+      `http://localhost:3000/api/v1/rentals/${rental.id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${operator.session.token}`,
+        },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const rentalsPending = await response.json();
+    expect(rentalsPending.status).toBe("active");
   });
 });

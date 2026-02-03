@@ -18,6 +18,7 @@ import {
   orderCreatedAdminTemplateEmail,
   orderCreatedCustomerTemplateEmail,
   orderStatusChangedCustomerTemplateEmail,
+  rentalUpdatedCustomerTemplateEmail,
 } from "infra/notifications/templates/email/rentals.templates";
 import user from "models/user";
 import rental from "models/rental";
@@ -251,4 +252,26 @@ eventDispatcher.on("FINANCIALINCOME_CREATED", async (event) => {
       ),
     },
   });
+});
+
+eventDispatcher.on("RENTAL_UPDATED", async (event) => {
+  const { changes } = event.payload;
+  const rentalUpdated = await rental.findOneById(event.entityId);
+  const customer = await user.findOneById(rentalUpdated.customer_id);
+
+  if (changes.status && changes.status === "active") {
+    sendNotification({
+      channel: "EMAIL",
+      params: {
+        from: EMAIL_SENDER_DEFAULT,
+        to: customer.email,
+        subject: "Seu aluguel foi iniciado!",
+        text: rentalUpdatedCustomerTemplateEmail(
+          rentalUpdated,
+          changes,
+          customer,
+        ),
+      },
+    });
+  }
 });
