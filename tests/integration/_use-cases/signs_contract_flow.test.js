@@ -420,11 +420,25 @@ describe("Use case: complete contract workflow", () => {
     expect(financialIncome).toBeDefined();
     expect(rentalFinancials).toBeDefined();
 
-    expect(financialIncome.amount_in_cents).toBe(
-      rentalFinancials.final_price_in_cents,
+    const response = await fetch(
+      `http://localhost:3000/api/v1/rentals/${rental.id}/incomes`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admin.session.token}`,
+        },
+      },
     );
-  });
 
+    expect(response.status).toBe(200);
+    const responseBody = await response.json();
+    const sum_amounts = responseBody.reduce(
+      (sum, income) => sum + income.amount_in_cents,
+      0,
+    );
+    expect(sum_amounts).toBe(rentalFinancials.final_price_in_cents);
+  });
   test("Operator view rental pending", async () => {
     const operator = await orchestrator.createAuthenticatedUser("operator");
 
