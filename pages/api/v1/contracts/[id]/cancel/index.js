@@ -3,6 +3,7 @@ import controller from "infra/controller.js";
 import contract from "models/contract";
 import authorization from "models/authorization";
 import { ForbiddenError } from "infra/errors";
+import { createEvent, eventDispatcher } from "infra/events";
 
 const router = createRouter();
 
@@ -35,6 +36,18 @@ async function postHandler(request, response) {
     cancel_reason,
     canceled_at,
   });
+
+  await eventDispatcher.dispatch(
+    createEvent({
+      type: "CONTRACT_CANCELED",
+      entity: "CONTRACT",
+      entityId: canceledContract.id,
+      payload: {
+        canceledContract,
+        canceledBy: userLogged,
+      },
+    }),
+  );
 
   return response.status(200).json(canceledContract);
 }

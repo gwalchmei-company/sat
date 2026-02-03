@@ -4,6 +4,7 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices();
   await orchestrator.clearDatabase();
   await orchestrator.runPendingMigrations();
+  await orchestrator.deleteAllEmails();
 });
 
 describe("POST /api/v1/contracts/[id]/cancel", () => {
@@ -74,6 +75,32 @@ describe("POST /api/v1/contracts/[id]/cancel", () => {
         "Não preciso mais do equipamento",
       );
       expect(responseBody.deleted_at).toBeNull();
+
+      // eslint-disable-next-line no-undef
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const allEmails = await orchestrator.getAllEmails();
+
+      const emailToCustomer = allEmails.find(
+        (email) =>
+          email.recipients.includes(`<${user.email}>`) &&
+          email.subject == "Seu contrato foi cancelado!",
+      );
+
+      expect(emailToCustomer).toBeDefined();
+      expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+      expect(emailToCustomer.text === "").toBe(false);
+      expect(emailToCustomer.text).toContain(user.username);
+
+      const emailToAdmin = allEmails.find(
+        (email) =>
+          email.recipients.includes("<ryan@gwalchmei.com.br>") &&
+          email.subject == `Um cliente cancelou um contrato!`,
+      );
+
+      expect(emailToAdmin).toBeDefined();
+      expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+      expect(emailToAdmin.text === "").toBe(false);
+      expect(emailToAdmin.text).toContain(user.username);
     });
 
     test("cancel signed contract successfully", async () => {

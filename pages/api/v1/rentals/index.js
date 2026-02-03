@@ -3,6 +3,9 @@ import controller from "infra/controller.js";
 import rental from "models/rental";
 import { ForbiddenError } from "infra/errors";
 import authorization from "models/authorization";
+import customerOrder from "models/customer-order";
+import { createEvent, eventDispatcher } from "infra/events";
+import user from "models/user";
 
 const router = createRouter();
 
@@ -15,6 +18,29 @@ export default router.handler(controller.errorHandlers);
 async function postHandler(request, response) {
   const rentalInputValues = request.body;
   const rentalCreated = await rental.create(rentalInputValues);
+
+  if (rentalCreated.customer_order_id) {
+    const order = await customerOrder.update(rentalCreated.customer_order_id, {
+      status: "approved",
+    });
+
+    const customer = await user.findOneById(rentalCreated.customer_id);
+
+    await eventDispatcher.dispatch(
+      createEvent({
+        type: "ORDER_APPROVED",
+        entity: "RENTAL",
+        entityId: rentalCreated.id,
+        payload: {
+          order,
+          rental: rentalCreated,
+          customer,
+          approved_by: request.context.user,
+        },
+      }),
+    );
+  }
+
   return response.status(201).json(rentalCreated);
 }
 

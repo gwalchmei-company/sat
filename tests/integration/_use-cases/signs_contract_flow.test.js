@@ -18,6 +18,9 @@ describe("Use case: complete contract workflow", () => {
   let rental;
   let contract;
 
+  let rentalFinancials;
+  let financialIncome;
+
   test("customer make a rental request", async () => {
     customer = await orchestrator.createAuthenticatedUser("customer");
 
@@ -42,28 +45,37 @@ describe("Use case: complete contract workflow", () => {
 
     expect(customerOrder.status).toBe(201);
     customerOrder = await customerOrder.json();
-  });
+    expect(customerOrder.status).toBe("pending");
 
-  test("admin approves rental request", async () => {
-    admin = await orchestrator.createAuthenticatedUser("admin");
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const approveResponse = await fetch(
-      `http://localhost:3000/api/v1/customerorder/${customerOrder.id}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `session_id=${admin.session.token}`,
-        },
-        body: JSON.stringify({ status: "approved" }),
-      },
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) => email.recipients[0] === `<${customer.user.email}>`,
+      (email) => email.subject[0] === "Seu pedido foi criado com sucesso!",
     );
-    expect(approveResponse.status).toBe(200);
-    const approvedOrder = await approveResponse.json();
-    expect(approvedOrder.status).toBe("approved");
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.recipients[0]).toBe(`<${customer.user.email}>`);
+    expect(emailToCustomer.text === "").toBe(false);
+
+    const emailToAdmin = allEmails.find(
+      (email) => email.recipients.includes("<ryan@gwalchmei.com.br>"),
+      (email) =>
+        email.subject[0] === `Novo pedido criado - ID ${customerOrder.id}`,
+    );
+
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.recipients).toContain("<ryan@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
   });
 
-  test("admin creates rental from approved customer order", async () => {
+  test("admin approves and create rental from approved customer order", async () => {
+    admin = await orchestrator.createAuthenticatedUser("admin");
     device = await orchestrator.createDevice();
 
     const rentalInput = {
@@ -90,6 +102,62 @@ describe("Use case: complete contract workflow", () => {
     expect(rentalResponse.status).toBe(201);
     rental = await rentalResponse.json();
     expect(rental.customer_order_id).toBe(customerOrder.id);
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Seu pedido foi processado e está em análise!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+
+    const emailToAdmin = allEmails.find(
+      (email) =>
+        email.recipients.includes("<ryan@gwalchmei.com.br>") &&
+        email.subject == `Uma Ordem de Serviço foi aprovada`,
+    );
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
+  });
+
+  test("creation of financial values of rental", async () => {
+    const financialValuesInput = {
+      rental_id: rental.id,
+      daily_price_in_cents: 50000,
+      total_price_in_cents: 350000,
+      deposit_in_cents: 100000,
+      discount_in_cents: 50,
+      final_price_in_cents: 349950,
+    };
+
+    const rentalFinancialsResponse = await fetch(
+      `http://localhost:3000/api/v1/rentalfinancials`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admin.session.token}`,
+        },
+        body: JSON.stringify(financialValuesInput),
+      },
+    );
+
+    rentalFinancials = await rentalFinancialsResponse.json();
+    expect(rentalFinancialsResponse.status).toBe(201);
+    expect(rentalFinancials.rental_id).toBe(rental.id);
+    expect(rentalFinancials.daily_price_in_cents).toBe(50000);
+    expect(rentalFinancials.total_price_in_cents).toBe(350000);
+    expect(rentalFinancials.final_price_in_cents).toBe(
+      rentalFinancials.total_price_in_cents -
+        rentalFinancials.discount_in_cents,
+    );
   });
 
   test("admin creates a contract to rental and sends it to customer", async () => {
@@ -118,6 +186,21 @@ describe("Use case: complete contract workflow", () => {
     expect(reponse.status).toBe(201);
     expect(contract.rental_id).toBe(rental.id);
     expect(contract.status).toBe("draft");
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Contrato criado com sucesso!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+    expect(emailToCustomer.text).toContain(customer.user.username);
   });
 
   test("admin sends contract to customer", async () => {
@@ -139,6 +222,21 @@ describe("Use case: complete contract workflow", () => {
     const sentContract = await sendResponse.json();
 
     expect(sentContract.status).toBe("sent");
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Contrato disponível para assinatura!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+    expect(emailToCustomer.text).toContain(customer.user.username);
   });
 
   test("customer views received contract", async () => {
@@ -216,6 +314,31 @@ describe("Use case: complete contract workflow", () => {
     );
 
     expect(resignResponse.status).toBe(400);
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Contrato assinado com sucesso!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+    expect(emailToCustomer.text).toContain(customer.user.username);
+
+    const emailToAdmin = allEmails.find(
+      (email) =>
+        email.recipients.includes("<ryan@gwalchmei.com.br>") &&
+        email.subject == "Um contrato foi assinado!",
+    );
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
+    expect(emailToAdmin.text).toContain(customer.user.username);
   });
 
   test("admin views signed contract", async () => {
@@ -237,11 +360,76 @@ describe("Use case: complete contract workflow", () => {
     expect(signedContract.signed_at).not.toBeNull();
   });
 
-  test("Operator view signed contract", async () => {
+  test("customer pays invoice", async () => {
+    const input = {
+      rental_id: rental.id,
+      amount_in_cents: 349950,
+      payment_method: "PIX",
+      received_at: "2026-02-01T10:30:00.000Z",
+      reference_date: "2026-02-01T00:00:00.000Z",
+      description: "Pagamento do aluguel CT-123456",
+      installment_number: 1,
+      total_installments: 1,
+      transaction_id: "PIX-ABC123",
+      notes: "Pagamento à vista",
+    };
+    const paymentResponse = await fetch(
+      `http://localhost:3000/api/v1/financialincome`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admin.session.token}`,
+        },
+        body: JSON.stringify(input),
+      },
+    );
+
+    expect(paymentResponse.status).toBe(201);
+    financialIncome = await paymentResponse.json();
+
+    expect(financialIncome.rental_id).toBe(rental.id);
+    expect(financialIncome.received_at).toBeDefined();
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Pagamento recebido com sucesso!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+
+    const emailToAdmin = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<ryan@gwalchmei.com.br>`) &&
+        email.subject == "Pagamento recebido",
+    );
+
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
+  });
+
+  test("checks if the customer has paid the invoice.", async () => {
+    expect(financialIncome).toBeDefined();
+    expect(rentalFinancials).toBeDefined();
+
+    expect(financialIncome.amount_in_cents).toBe(
+      rentalFinancials.final_price_in_cents,
+    );
+  });
+
+  test("Operator view rental pending", async () => {
     const operator = await orchestrator.createAuthenticatedUser("operator");
 
     const response = await fetch(
-      `http://localhost:3000/api/v1/contracts/${contract.id}`,
+      `http://localhost:3000/api/v1/rentals/${rental.id}`,
       {
         method: "GET",
         headers: {
@@ -252,9 +440,70 @@ describe("Use case: complete contract workflow", () => {
     );
 
     expect(response.status).toBe(200);
-    const signedContract = await response.json();
-    expect(signedContract.status).toBe("signed");
-    expect(signedContract.signed_by).toBe(customer.user.id);
-    expect(signedContract.signed_at).not.toBeNull();
+    const rentalsPending = await response.json();
+    expect(rentalsPending.status).toBe("pending");
+  });
+
+  test("Admin updates rental status to active", async () => {
+    const response = await fetch(
+      `http://localhost:3000/api/v1/rentals/${rental.id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${admin.session.token}`,
+        },
+        body: JSON.stringify({
+          status: "active",
+        }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const updatedRental = await response.json();
+    expect(updatedRental.status).toBe("active");
+
+    // eslint-disable-next-line no-undef
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const allEmails = await orchestrator.getAllEmails();
+
+    const emailToCustomer = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<${customer.user.email}>`) &&
+        email.subject == "Seu aluguel foi iniciado!",
+    );
+
+    expect(emailToCustomer).toBeDefined();
+    expect(emailToCustomer.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToCustomer.text === "").toBe(false);
+
+    const emailToAdmin = allEmails.find(
+      (email) =>
+        email.recipients.includes(`<ryan@gwalchmei.com.br>`) &&
+        email.subject == "Um aluguel foi iniciado!",
+    );
+
+    expect(emailToAdmin).toBeDefined();
+    expect(emailToAdmin.sender).toBe("<contato@gwalchmei.com.br>");
+    expect(emailToAdmin.text === "").toBe(false);
+  });
+
+  test("Operator view rental active", async () => {
+    const operator = await orchestrator.createAuthenticatedUser("operator");
+
+    const response = await fetch(
+      `http://localhost:3000/api/v1/rentals/${rental.id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${operator.session.token}`,
+        },
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const rentalsPending = await response.json();
+    expect(rentalsPending.status).toBe("active");
   });
 });

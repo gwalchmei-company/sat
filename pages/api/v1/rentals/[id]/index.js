@@ -3,6 +3,7 @@ import controller from "infra/controller.js";
 import rental from "models/rental";
 import { ForbiddenError } from "infra/errors";
 import authorization from "models/authorization";
+import { createEvent, eventDispatcher } from "infra/events";
 
 const router = createRouter();
 
@@ -46,6 +47,18 @@ async function patchHandler(request, response) {
   );
 
   const updatedRental = await rental.update(rentalId, valuesFiltered);
+
+  await eventDispatcher.dispatch(
+    createEvent({
+      type: "RENTAL_UPDATED",
+      entity: "RENTAL",
+      entityId: rentalId,
+      payload: {
+        updatedBy: userLogged,
+        changes: valuesFiltered,
+      },
+    }),
+  );
 
   return response.status(200).json(updatedRental);
 }

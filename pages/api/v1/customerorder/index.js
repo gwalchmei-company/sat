@@ -4,6 +4,7 @@ import customerOrder from "models/customer-order";
 import { ForbiddenError } from "infra/errors";
 import user from "models/user";
 import authorization from "models/authorization";
+import { createEvent, eventDispatcher } from "infra/events";
 
 const router = createRouter();
 
@@ -35,6 +36,18 @@ async function postHandler(request, response) {
   }
 
   const createdRental = await customerOrder.create(valuesFiltered);
+
+  await eventDispatcher.dispatch(
+    createEvent({
+      type: "ORDER_CREATED",
+      entity: "ORDER",
+      entityId: createdRental.id,
+      payload: {
+        order: createdRental,
+        createdBy: userLogged,
+      },
+    }),
+  );
 
   return response.status(201).json(createdRental);
 }

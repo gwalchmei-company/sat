@@ -1,7 +1,5 @@
 import database from "infra/database";
-import email from "infra/email";
 import { ForbiddenError, NotFoundError } from "infra/errors";
-import webserver from "infra/webserver";
 import user from "./user";
 import authorization from "./authorization";
 
@@ -63,20 +61,6 @@ async function create(userId) {
   }
 }
 
-async function sendEmailToUser(user, activationToken) {
-  await email.send({
-    from: "Gwalchmei <contato@gwalchmei.com.br>",
-    to: user.email,
-    subject: "Ative seu cadastro!",
-    text: `${user.username}, clique no link abaixo para ativar seu cadastro no Gwalchmei.
-
-${webserver.origin}/cadastro/ativar/${activationToken.id}
-
-Atenciosamente,
-Equipe Gwalchmei`,
-  });
-}
-
 async function markTokenAsUsed(tokenId) {
   const token = await runUpdateQuery(tokenId);
   return token;
@@ -119,7 +103,6 @@ async function activatedUserByUserId(userId) {
 }
 
 const activation = {
-  sendEmailToUser,
   create,
   findOneValidById,
   markTokenAsUsed,

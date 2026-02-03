@@ -4,6 +4,7 @@ import { validate as isValidUuid } from "uuid";
 import rental from "models/rental";
 
 const CONTRACT_STATUS = ["draft", "generated", "sent", "signed", "canceled"];
+const EXPIRATION_IN_MILLISECONDS = 9 * 24 * 60 * 60 * 1000;
 
 async function create(contractObject) {
   await validateContractObject(contractObject);
@@ -932,6 +933,7 @@ const contract = {
   delete: deleteContract,
   sign,
   cancel,
+  EXPIRATION_IN_MILLISECONDS,
 };
 
 export default contract;

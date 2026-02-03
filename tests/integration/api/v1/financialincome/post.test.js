@@ -5,6 +5,7 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices();
   await orchestrator.clearDatabase();
   await orchestrator.runPendingMigrations();
+  await orchestrator.deleteAllEmails();
 });
 
 describe("POST /api/v1/financialincome", () => {
@@ -82,7 +83,11 @@ describe("POST /api/v1/financialincome", () => {
   describe("Admin user", () => {
     test("create financial income when user is admin", async () => {
       const { session } = await orchestrator.createAuthenticatedUser("admin");
-      const rental = await orchestrator.createRental();
+      const { user: customerUser } =
+        await orchestrator.createAuthenticatedUser("customer");
+      const rental = await orchestrator.createRental({
+        customer_id: customerUser.id,
+      });
 
       const financialIncomeInput = {
         rental_id: rental.id,
