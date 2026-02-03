@@ -37,13 +37,10 @@ async function patchHandler(request, response) {
   const rentalId = request.query.id;
   const inputInsecure = request.body;
 
-  const targetRental = await rental.findOneById(rentalId);
-
   const valuesFiltered = authorization.filterInput(
     userLogged,
     "update:rentals",
     inputInsecure,
-    targetRental,
   );
 
   const updatedRental = await rental.update(rentalId, valuesFiltered);
